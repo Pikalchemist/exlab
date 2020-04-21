@@ -1,2 +1,2 @@
-# exlab
+# EXlab
 EXperimental LABoratory
