@@ -1,0 +1,6 @@
+ds1:
+  name: Dataset 1
+  path: ds1
+ds2:
+  name: Dataset 2
+  path: ds2
