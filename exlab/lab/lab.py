@@ -24,3 +24,6 @@ class Lab(Modular):
         if self.defaults:
             config.load_file(self.defaults)
         config.load_args(sys.argv[1:])
+        config.populate()
+        print(config)
+        print(config.data)

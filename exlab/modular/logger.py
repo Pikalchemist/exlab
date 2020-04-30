@@ -1,54 +1,129 @@
 from exlab.utils.io import Colors
+from enum import Enum
 
 import coloredlogs
 import logging
 import sys
 
 
+# class AllLogger(object):
+#     def __init__(self, logger):
+#         self.logger = logger
+
+loggers = {}
+
+
+def getLogger(name, *args, **kwargs):
+    kwargs['name'] = name
+    if name not in loggers:
+        loggers[name] = Logger(*args, **kwargs)
+    logger = loggers[name]
+
+    return Logger(proxy=logger, *args, **kwargs)
+
+
+# class LoggerGroup(object):
+#     def __init__(self, group):
+#         self.group = group
+    
+#     def 
+
+
+class LoggingKind(Enum):
+    FILE = 0
+    EVENTS = 1
+    TERMINAL = 2
+
+
 class Logger(object):
     DEBUG2 = 5
 
     _main = None
-
-    def __init__(self, module):
+ 
+    def __init__(self, module=None, name='', tag='', proxy=None):
         self.module = module
+        self.proxy = proxy
+        self.tag = tag
 
-        self.logger = self.create_logger(module.name)
+        if self.proxy:
+            self.name = name
+        else:
+            self.name = name if name else ('m:{}'.format(
+                self.module.name) if self.module else '')
 
-        self.events = {}
-        self.current_event = None
+            self.events = {}
+            self.current_event = None
+            self.level = {}
+            self.default_level()
 
-        self.console_handler = None
-        self.console_enable()
+            self.update()
+            self.enable_terminal()
+        
+    def update(self):
+        if self.proxy:
+            return
 
-        self.default_level()
+        if not self.module or self.module.root is self.module:
+            self.root = self
+        else:
+            self.root = self.module.root.logger
+
+        if self.root == self:
+            self.logger_terminal = self.create_logger('{}:c'.format(self.name))
+            self.logger_file = self.create_logger('{}:f'.format(self.name))
 
     # def post_init(self):
     #     if self.module.rootModule() == self.module:
     #         self.__class__._main = self
 
-    def console_enable(self):
-        self.console_handler = logging.StreamHandler()
-        self.console_handler.setLevel(logging.ERROR)
-        self.logger.addHandler(self.console_handler)
+    def enable_terminal(self):
+        if self.proxy:
+            self.proxy.enable_terminal()
+        elif self.root is not self:
+            self.root.enable_terminal()
+        elif not self.logger_terminal.handlers:
+            sh = logging.StreamHandler()
+            sh.setLevel(1)
+            self.logger_terminal.addHandler(sh)
 
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        self.console_handler.setFormatter(formatter)
+            formatter = logging.Formatter(
+                '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            sh.setFormatter(formatter)
 
-        coloredlogs.install(level='DEBUG', logger=self.logger)
+            coloredlogs.install(level=1, logger=self.logger_terminal)
+    
+    def disable_terminal(self):
+        if self.proxy:
+            self.proxy.enable_terminal()
+        elif self.root is not self:
+            self.root.enable_terminal()
+        elif self.logger_terminal.handlers:
+            self.logger_terminal.handlers = []
+    
+    def enable_file(self, filename):
+        if self.proxy:
+            self.proxy.enable_terminal()
+        elif self.root is not self:
+            self.root.enable_terminal()
+        elif not self.logger_file.handlers:
+            pass
 
-    def setLevel(self, level):
-        self.save_level = level
+    def setLevel(self, level, kind=LoggingKind.TERMINAL):
+        if self.proxy:
+            self.proxy.setLevel(level, kind)
+        else:
+            self.level[kind] = level
 
-    def enable_debug(self):
-        self.save_level = logging.DEBUG
+    def enable_debug(self, kind=LoggingKind.TERMINAL):
+        self.setLevel(logging.DEBUG, kind=kind)
 
-    def enable_debug2(self):
-        self.save_level = self.DEBUG2
+    def enable_debug2(self, kind=LoggingKind.TERMINAL):
+        self.setLevel(self.DEBUG2, kind=kind)
 
     def default_level(self):
-        self.save_level = logging.INFO
+        self.level[LoggingKind.EVENTS] = logging.DEBUG
+        self.level[LoggingKind.FILE] = logging.INFO
+        self.level[LoggingKind.TERMINAL] = logging.INFO
 
     def create_logger(self, name):
         logger = logging.getLogger(name)
@@ -94,14 +169,25 @@ class Logger(object):
     #     return cls._main
 
     def log(self, msg, level, *args, **kwargs):
-        tag = kwargs.pop('tag', '').upper()
-        self.logger.log(level, '[{}] {}'.format(tag, msg), *args, **kwargs)
+        if self.proxy:
+            kwargs['tag'] = kwargs.get('tag', self.tag)
+            return self.proxy.log(msg, level, *args, **kwargs)
 
-        if level >= self.save_level:
-            root = self.module.root()
+        tag = kwargs.pop('tag', '').upper()
+        tag = tag if tag else self.tag
+
+        if level >= self.level[LoggingKind.TERMINAL]:
+            self.root.logger_terminal.log(
+                level, '[{}] {}'.format(tag, msg), *args, **kwargs)
+        if level >= self.level[LoggingKind.FILE]:
+            self.root.logger_file.log(
+                level, '[{}] {}'.format(tag, msg), *args, **kwargs)
+
+        if self.module and level >= self.level[LoggingKind.EVENTS]:
+            root = self.module.root
             event = Event(msg, level, root.time, emitter=self.module, tag=tag)
 
-            self.module.logger.record_event(event)
+            self.root.record_event(event)
 
             return event
 
