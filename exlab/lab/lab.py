@@ -1,5 +1,5 @@
-from exlab.remote.config import Config, ConfigStructure
-from exlab.modular.module import Modular
+from exlab.interface.config import Config, ConfigStructure
+from exlab.modular.modular import Modular
 
 import sys
 

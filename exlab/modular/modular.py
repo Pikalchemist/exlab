@@ -20,16 +20,18 @@ class Module(object):
 
         if isinstance(parent, Modular):
             parent = parent.modular
-        self.parent = parent
-        if self.parent:
-            self.parent.children.add(self)
+        self.parent = None
+        self.attach(parent)
+        
+        self.time = 0
 
         # Logging
         self.logger = Logger(self)
-
-        self.time = 0
+        self.logger.info('Module \'{}\' has been started'.format(self.name))
     
     def add_child(self, module):
+        if module is None:
+            return
         if module.parent:
             module.detached()
             module.parent.children.remove(module)
@@ -38,6 +40,8 @@ class Module(object):
         module.attached()
 
     def attach(self, parent):
+        if parent is None:
+            return
         if self.parent:
             self.detached()
             self.parent.children.remove(self)
@@ -47,6 +51,7 @@ class Module(object):
     
     def attached(self):
         self.logger.update()
+        self.logger.info('Module \'{}\' has been attached to \'{}\''.format(self.name, self.parent.name))
     
     def detached(self):
         self.logger.update()

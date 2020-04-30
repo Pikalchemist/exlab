@@ -1,6 +1,6 @@
 from exlab.utils.path import ymlbpath
 from exlab.utils.structure import get_sub_dict_path, get_dict_path
-from exlab.remote.loader import Loader
+from exlab.interface.loader import Loader
 import exlab.modular.logger as exlogger
 
 import copy
