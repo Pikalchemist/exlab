@@ -22,3 +22,7 @@ class Colors(Enum):
     UNDERLINE = '\033[4m'
 
     RESET = '\033[0m'
+
+
+def shortid(instance, length=4):
+    return str(id(instance))[-length:]

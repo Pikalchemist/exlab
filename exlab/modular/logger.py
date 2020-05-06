@@ -176,12 +176,13 @@ class Logger(object):
         tag = kwargs.pop('tag', '').upper()
         tag = tag if tag else self.tag
 
+        tag_str = '[{}] '.format(tag) if tag else ''
         if level >= self.level[LoggingKind.TERMINAL]:
             self.root.logger_terminal.log(
-                level, '[{}] {}'.format(tag, msg), *args, **kwargs)
+                level, '{}{}'.format(tag_str, msg), *args, **kwargs)
         if level >= self.level[LoggingKind.FILE]:
             self.root.logger_file.log(
-                level, '[{}] {}'.format(tag, msg), *args, **kwargs)
+                level, '{}{}'.format(tag_str, msg), *args, **kwargs)
 
         if self.module and level >= self.level[LoggingKind.EVENTS]:
             root = self.module.root

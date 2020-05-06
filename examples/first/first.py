@@ -12,3 +12,4 @@ lab.parameter('learner').import_file(['learners', 'learners2'])
 lab.filter('learners/*').parameter('dataset').import_key('datasets', 'data.yml')
 
 lab.load()
+lab.run()

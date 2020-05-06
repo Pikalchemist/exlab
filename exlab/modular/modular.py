@@ -14,12 +14,13 @@ class Module(object):
     def __init__(self, modular, name:str = '', parent=None):
         self.modular = modular
         self.name = name if name else self.modular.__class__.__name__
+        self.logger = None
 
         # Hierarchy
         self.children = set()
 
         if isinstance(parent, Modular):
-            parent = parent.modular
+            parent = parent.module
         self.parent = None
         self.attach(parent)
         
@@ -50,11 +51,13 @@ class Module(object):
         self.attached()
     
     def attached(self):
-        self.logger.update()
-        self.logger.info('Module \'{}\' has been attached to \'{}\''.format(self.name, self.parent.name))
+        if self.logger:
+            self.logger.update()
+            self.logger.info('Module \'{}\' has been attached to \'{}\''.format(self.name, self.parent.name))
     
     def detached(self):
-        self.logger.update()
+        if self.logger:
+            self.logger.update()
     
     @property
     def root(self):

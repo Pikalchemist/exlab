@@ -1,5 +1,6 @@
 from exlab.utils.path import ymlbpath, extpath
 from exlab.utils.structure import get_sub_dict_path, get_dict_path, set_dict_path
+from exlab.utils.io import shortid
 from exlab.interface.loader import Loader
 import exlab.modular.logger as exlogger
 
@@ -21,11 +22,14 @@ class LightConfig(dict):
 
 
 class Config(LightConfig):
+    MAX_MULTIVALUES = 100
+
     def __init__(self, basedir='', structure=None, top=True, relativedir='', topdir='', loader=None):
         super(Config, self).__init__()
         self.top = top
         self.structure = structure if structure else ConfigStructure()
         self.parameters = {}
+        self.multivalues = {}
 
         self.basedir = basedir
         self.topdir = topdir if topdir else basedir
@@ -34,10 +38,10 @@ class Config(LightConfig):
         self.loader = loader
 
         logger.debug('#{} config file created, basedir {}'.format(
-            id(self), self.basedir))
+            shortid(self), self.basedir))
 
     def load_file(self, filename):
-        logger.debug2('#{} load file {}'.format(id(self), filename))
+        logger.debug2('#{} load file {}'.format(shortid(self), filename))
 
         data = self._load_data_from_file(filename)
         self.update(data)
@@ -52,12 +56,12 @@ class Config(LightConfig):
             return data
         except Exception as e:
             logger.warning('#{} cannot load data from {}: {}'.format(
-                id(self), filename, e))
+                shortid(self), filename, e))
             return {}
 
     def load_args(self, argv, custom_argparse=False):
         logger.debug2(
-            '#{} load input arguments {}'.format(id(self), argv))
+            '#{} load input arguments {}'.format(shortid(self), argv))
 
         if argv:
             arg = argv[0]
@@ -68,6 +72,9 @@ class Config(LightConfig):
         for arg in argv:
             if '=' in arg:
                 path, value = arg.split('=')[:2]
+                if ',' in value:
+                    self.multivalues[path] = value.split(',')
+                    value = value.split(',')[0]
                 set_dict_path(self, path, value)
             else:
                 other_args.append(arg)
@@ -82,11 +89,39 @@ class Config(LightConfig):
         parsed = parser.parse_args(other_args)
 
         return parsed
+    
+    def grid(self):
+        confs = []
+
+        for key, values in self.multivalues.items():
+            if confs:
+                confs = [dict(conf, key=value) for value in values for conf in confs]
+            else:
+                confs = [{key: value} for value in values]
+
+        if len(confs) > self.MAX_MULTIVALUES:
+            raise Exception('Too many ({}/{})'.format(len(confs), self.MAX_MULTIVALUES))
+    
+        if not confs:
+             # Default configuration
+            confs.append({})
+    
+        configs = []
+        for conf in confs:
+            configs.append(self.copy(conf))
+
+        return configs
+    
+    def copy(self, conf={}):
+        config = copy.deepcopy(self)
+        for key, value in conf.items():
+            set_dict_path(config, key, value)
+        return config
 
     def _load_parameters(self, filename=None):
         parameters = self.structure.retrieve_parameters(self.top, os.path.join(self.relativedir, filename) if filename else None)
         logger.debug2(
-            '#{} parameters {}'.format(id(self), parameters))
+            '#{} parameters {}'.format(shortid(self), parameters))
 
         for key, parameter in parameters.items():
             try:
@@ -140,7 +175,7 @@ class Config(LightConfig):
             if '__import__' in data:
                 filename = data['__import__']
                 logger.debug2(
-                    '#{} import from {}'.format(id(self), filename))
+                    '#{} import from {}'.format(shortid(self), filename))
 
                 data.clear()
                 data.update(self._load_data_from_file(filename))
@@ -157,10 +192,10 @@ class Config(LightConfig):
             if '__path__' in data or '__class__' in data:
                 if '__path__' not in data:
                     logger.error(
-                        '#{} missing __path__ key for object import'.format(id(self)))
+                        '#{} missing __path__ key for object import'.format(shortid(self)))
                 elif '__class__' not in data:
                     logger.error(
-                        '#{} missing __class__ key for object import'.format(id(self)))
+                        '#{} missing __class__ key for object import'.format(shortid(self)))
                 else:
                     obj = self.__instantiate_object(data)
 
@@ -192,12 +227,12 @@ class Config(LightConfig):
                 kwargs[pass_dict] = arg_data
 
         logger.debug2(
-            '#{} object {} import from {}'.format(id(self), classname, path))
+            '#{} object {} import from {}'.format(shortid(self), classname, path))
 
         cls_ = self.loader.load_type(path, classname)
 
         logger.debug2(
-            '#{} instantiate {} with parameters {} and {}'.format(id(self), classname, args, kwargs))
+            '#{} instantiate {} with parameters {} and {}'.format(shortid(self), classname, args, kwargs))
 
         obj = cls_(*args, **kwargs)
         return obj

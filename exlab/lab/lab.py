@@ -1,6 +1,7 @@
 from exlab.interface.config import Config, ConfigStructure
 from exlab.interface.loader import Loader
 from exlab.modular.modular import Modular
+from exlab.lab.experiment import Experiment
 
 import sys
 
@@ -27,14 +28,20 @@ class Lab(Modular):
     def filter(self, name):
         return self.config_structure.filter(name)
     
+    def run(self, thread=False):
+        if not self.experiments:
+            raise Exception('No experiment exist in this lab, please use load() first')
+        for experiment in self.experiments:
+            experiment.run()
+    
     def load(self, filename=None):
-        config = Config(self.configdir[0], structure=self.config_structure)
+        configs = Config(self.configdir[0], structure=self.config_structure)
         if self.defaults:
-            config.load_file(self.defaults)
+            configs.load_file(self.defaults)
         if filename:
-            config.load_file(filename)
-        config.load_args(sys.argv[1:])
-        config.populate(Loader.instance())
+            configs.load_file(filename)
+        configs.load_args(sys.argv[1:])
 
-        print(config)
-        print(config.data)
+        for config in configs.grid():
+            self.experiments.append(Experiment(self, config))
+
