@@ -1,3 +1,4 @@
 name: Hello
 learner: test/learner1
-dataset: ds1
+infos:
+  dataset: ds1

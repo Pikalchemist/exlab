@@ -1,0 +1,4 @@
+name: None
+learner: test/learner2
+infos:
+  dataset: ds2

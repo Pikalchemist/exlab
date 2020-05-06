@@ -27,10 +27,12 @@ class Lab(Modular):
     def filter(self, name):
         return self.config_structure.filter(name)
     
-    def load(self):
+    def load(self, filename=None):
         config = Config(self.configdir[0], structure=self.config_structure)
         if self.defaults:
             config.load_file(self.defaults)
+        if filename:
+            config.load_file(filename)
         config.load_args(sys.argv[1:])
         config.populate(Loader.instance())
 

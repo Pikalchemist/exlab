@@ -12,3 +12,8 @@ def get_sub_dict_path(dict_: dict, keypath: str) -> (dict, str):
 def get_dict_path(dict_: dict, keypath: str):
     dict_, key = get_sub_dict_path(dict_, keypath)
     return dict_[key]
+
+
+def set_dict_path(dict_: dict, keypath: str, value):
+    dict_, key = get_sub_dict_path(dict_, keypath)
+    dict_[key] = value

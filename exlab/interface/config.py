@@ -1,8 +1,9 @@
 from exlab.utils.path import ymlbpath, extpath
-from exlab.utils.structure import get_sub_dict_path, get_dict_path
+from exlab.utils.structure import get_sub_dict_path, get_dict_path, set_dict_path
 from exlab.interface.loader import Loader
 import exlab.modular.logger as exlogger
 
+import argparse
 import copy
 import yaml
 import os
@@ -54,11 +55,36 @@ class Config(LightConfig):
                 id(self), filename, e))
             return {}
 
-    def load_args(self, argv):
-        pass
+    def load_args(self, argv, custom_argparse=False):
+        logger.debug2(
+            '#{} load input arguments {}'.format(id(self), argv))
+
+        if argv:
+            arg = argv[0]
+            if '=' not in arg and not arg.startswith('-'):
+                self.load_file(argv.pop(0))
+
+        other_args = []
+        for arg in argv:
+            if '=' in arg:
+                path, value = arg.split('=')[:2]
+                set_dict_path(self, path, value)
+            else:
+                other_args.append(arg)
+
+        self._load_parameters()
+
+        if custom_argparse:
+            return other_args
+        
+        parser = argparse.ArgumentParser(description='EXLab')
+        parser.add_argument('--verbose', '-v', action='count', default=0)
+        parsed = parser.parse_args(other_args)
+
+        return parsed
 
     def _load_parameters(self, filename=None):
-        parameters = self.structure.retrieve_parameters(self.top, os.path.join(self.relativedir, filename))
+        parameters = self.structure.retrieve_parameters(self.top, os.path.join(self.relativedir, filename) if filename else None)
         logger.debug2(
             '#{} parameters {}'.format(id(self), parameters))
 
@@ -69,27 +95,32 @@ class Config(LightConfig):
                     # Key
                     if parameter._key:
                         (tkey, tfilename) = parameter._key
-                        fns = [None] + tfilename
+                        fns = tfilename if tfilename else [None]
                         for fn in fns:
-                            if fn:
-                                config = Config(self.topdir, structure=self.structure, top=False)
-                                config.load_file(tfilename)
-                            else:
-                                config = self
-                            sdict[skey] = get_dict_path(config, tkey).get(sdict[skey])
-                            break
+                            if isinstance(sdict[skey], (str, int)):
+                                if fn:
+                                    config = Config(self.topdir, structure=self.structure, top=False)
+                                    config.load_file(fn)
+                                else:
+                                    config = self
+                                try:
+                                    sdict[skey] = get_dict_path(config, tkey).get(sdict[skey])
+                                    break
+                                except Exception:
+                                    pass
 
                     # File
                     if parameter._file:
-                        folder = Loader.find_file(
-                            parameter._file, prefix=self.basedir, suffix=extpath(sdict[skey], 'yml'))
-                        config = Config(os.path.join(
-                            self.basedir, folder),
-                            topdir=self.topdir,
-                            relativedir=os.path.join(self.relativedir, folder),
-                            structure=self.structure, top=False)
-                        config.load_file(sdict[skey])
-                        sdict[skey] = config
+                        if isinstance(sdict[skey], (str, int)):
+                            folder = Loader.find_file(
+                                parameter._file, prefix=self.basedir, suffix=extpath(sdict[skey], 'yml'))
+                            config = Config(os.path.join(
+                                self.basedir, folder),
+                                topdir=self.topdir,
+                                relativedir=os.path.join(self.relativedir, folder),
+                                structure=self.structure, top=False)
+                            config.load_file(sdict[skey])
+                            sdict[skey] = config
             except KeyError:
                 continue
 
