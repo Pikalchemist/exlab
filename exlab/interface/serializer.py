@@ -12,9 +12,9 @@ def serialize(instance, keys, refkeys=[], exportPathType=False, options={}):
     dict_ = {}
 
     if exportPathType:
-        from .loaders import DataManager
+        from exlab.interface.loader import Loader
         dict_['type'] = instance.__class__.__name__
-        dict_['path'] = os.path.splitext(DataManager.classPath(instance))[0]
+        dict_['path'] = os.path.splitext(Loader.instance().classPath(instance))[0]
     for key in keys:
         attr = getattr(instance, key)
         if attr is not None:
@@ -77,9 +77,9 @@ class Serializer(object):
         dict_ = {}
 
         if exportPathType:
-            from .loaders import DataManager
+            from exlab.interface.loader import Loader
             dict_['type'] = instance.__class__.__name__
-            dict_['path'] = os.path.splitext(DataManager.classPath(instance))[0]
+            dict_['path'] = os.path.splitext(Loader.instance().classPath(instance))[0]
 
         keys += ['cid', 'gid']
         for key in keys:
@@ -131,8 +131,8 @@ class Serializer(object):
         if not type(dict_) in (dict,):
             return dict_
 
-        from .loaders import DataManager
-        cls = DataManager.loadType(dict_['path'], dict_['type'])
+        from exlab.interface.loader import Loader
+        cls = Loader.instance().loadType(dict_['path'], dict_['type'])
         return cls.deserialize(dict_, *args, options=options, context=context, **kwargs)
 
 

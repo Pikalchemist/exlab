@@ -6,9 +6,9 @@ basedir = basepath(__file__)
 
 lab = Lab(basedir, defaults='config.yml', help='Simple example')
 
-lab.parameter('dataset').key('datasets', 'data.yml')
-lab.parameter('learner').config('learners')
+lab.parameter('dataset').import_key('datasets', 'data.yml')
+lab.parameter('learner').import_file('learners')
 
-lab.filter('learners/*').parameter('dataset').key('datasets', 'data.yml')
+lab.filter('learners/*').parameter('dataset').import_key('datasets', 'data.yml')
 
 lab.load()

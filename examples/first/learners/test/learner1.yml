@@ -7,4 +7,5 @@ obj:
   __class__: Learner
   __args__: [1, 2, 3]
   __dict__: true
+  test: Hello
 dataset: ds2

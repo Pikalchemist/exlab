@@ -4,4 +4,4 @@ class Learner(object):
         self.args = args
     
     def __repr__(self):
-        return str(self.args)
+        return f'Learner{self.args}'

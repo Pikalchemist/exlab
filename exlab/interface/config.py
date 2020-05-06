@@ -88,7 +88,7 @@ class Config(LightConfig):
     def populate(self, loader=None):
         loader = loader if loader else self.loader
         if not loader:
-            loader = Loader(self.basedir)
+            loader = Loader.instance(self.basedir)
         self.loader = loader
 
         self.data = copy.deepcopy(self)
@@ -215,8 +215,8 @@ class Parameter(object):
     def __repr__(self):
         return 'Parameter(k:{}, c:{})'.format(self._key, self._config)
 
-    def key(self, key, filename=None):
+    def import_key(self, key, filename=None):
         self._key = (key, filename)
 
-    def config(self, folder):
+    def import_file(self, folder):
         self._config = folder
