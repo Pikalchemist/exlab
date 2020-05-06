@@ -88,3 +88,10 @@ class Loader(object):
         if not cls_:
             return module
         return getattr(module, cls_)
+    
+    @staticmethod
+    def find_file(filelist, prefix='', suffix=''):
+        for file_ in filelist:
+            if os.path.exists(os.path.join(prefix, file_, suffix)):
+                return file_
+        return None

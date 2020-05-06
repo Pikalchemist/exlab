@@ -1,0 +1,11 @@
+__path__: learner.py
+__class__: Learner
+__dict__: true
+name: Learner 2
+obj:
+  __path__: learner.py
+  __class__: Learner
+  __args__: [3, 4, 5]
+  __dict__: true
+  test: Hello
+dataset: ds1

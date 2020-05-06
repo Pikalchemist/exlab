@@ -1,4 +1,4 @@
-from exlab.utils.path import ymlbpath
+from exlab.utils.path import ymlbpath, extpath
 from exlab.utils.structure import get_sub_dict_path, get_dict_path
 from exlab.interface.loader import Loader
 import exlab.modular.logger as exlogger
@@ -66,19 +66,27 @@ class Config(LightConfig):
             try:
                 sdict, skey = get_sub_dict_path(self, key)
                 if skey in sdict:
+                    # Key
                     if parameter._key:
                         (tkey, tfilename) = parameter._key
-                        if tfilename:
-                            config = Config(self.topdir, structure=self.structure, top=False)
-                            config.load_file(tfilename)
-                        else:
-                            config = self
-                        sdict[skey] = get_dict_path(config, tkey).get(sdict[skey])
-                    if parameter._config:
+                        fns = [None] + tfilename
+                        for fn in fns:
+                            if fn:
+                                config = Config(self.topdir, structure=self.structure, top=False)
+                                config.load_file(tfilename)
+                            else:
+                                config = self
+                            sdict[skey] = get_dict_path(config, tkey).get(sdict[skey])
+                            break
+
+                    # File
+                    if parameter._file:
+                        folder = Loader.find_file(
+                            parameter._file, prefix=self.basedir, suffix=extpath(sdict[skey], 'yml'))
                         config = Config(os.path.join(
-                            self.basedir, parameter._config),
+                            self.basedir, folder),
                             topdir=self.topdir,
-                            relativedir=os.path.join(self.relativedir, parameter._config),
+                            relativedir=os.path.join(self.relativedir, folder),
                             structure=self.structure, top=False)
                         config.load_file(sdict[skey])
                         sdict[skey] = config
@@ -210,13 +218,17 @@ class ConfigStructure(object):
 class Parameter(object):
     def __init__(self):
         self._key = None
-        self._config = None
+        self._file = None
     
     def __repr__(self):
-        return 'Parameter(k:{}, c:{})'.format(self._key, self._config)
+        return 'Parameter(k:{}, c:{})'.format(self._key, self._file)
 
-    def import_key(self, key, filename=None):
+    def import_key(self, key, filename=[]):
+        if not isinstance(filename, list):
+            filename = [filename]
         self._key = (key, filename)
 
     def import_file(self, folder):
-        self._config = folder
+        if not isinstance(folder, list):
+            folder = [folder]
+        self._file = folder
