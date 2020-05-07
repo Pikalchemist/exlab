@@ -19,6 +19,10 @@ class LightConfig(dict):
     def __init__(self, dict_={}, data=None):
         super(LightConfig, self).__init__(dict_)
         self.data = data if data else dict_
+    
+    def update(self, dict_):
+        dict.update(self, dict_)
+        self.data.update(dict_)
 
 
 class Config(LightConfig):
@@ -162,11 +166,11 @@ class Config(LightConfig):
     def populate(self, loader=None):
         loader = loader if loader else self.loader
         if not loader:
-            loader = Loader.instance(self.basedir)
+            loader = Loader.instance()
         self.loader = loader
 
         self.data = copy.deepcopy(self)
-        self.update(self._walk_populate(self))
+        dict.update(self, self._walk_populate(self))
 
     def _walk_dict(self, data):
         if type(data) is dict:
@@ -178,7 +182,8 @@ class Config(LightConfig):
                     '#{} import from {}'.format(shortid(self), filename))
 
                 data.clear()
-                data.update(self._load_data_from_file(filename))
+                d = self._load_data_from_file(filename)
+                data.update(d)
         elif type(data) in (list, tuple):
             for value in data:
                 self._walk_dict(value)

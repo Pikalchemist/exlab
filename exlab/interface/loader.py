@@ -3,6 +3,8 @@
     Python Version: 3.6
 '''
 import exlab.modular.logger as exlogger
+from exlab.interface.database import Database
+from exlab.utils.io import mkdir
 
 import sys
 import os
@@ -27,7 +29,6 @@ class Loader(object):
     _instance = None
 
     def __init__(self):
-        print('bloup')
         if self._instance is not None:
             raise Exception('Loader cannot be instantiated twice!')
 
@@ -35,14 +36,17 @@ class Loader(object):
         logger.info('Loader has been init')
 
     @classmethod
-    def instance(cls, sourcepath=[]):
+    def instance(cls):
         """
         Get instance
         """
         if cls._instance is None:
             cls._instance = cls()
-        cls._instance.add_source(sourcepath)
         return cls._instance
+    
+    @property
+    def databasedir(self):
+        return Database.databasedir
     
     def add_source(self, sourcepath):
         if type(sourcepath) is not list:
@@ -58,6 +62,10 @@ class Loader(object):
         if added:
             logger.info(
                 'Source folder(s) {} has been added to the loader'.format(added))
+    
+    def set_databasedir(self, databasedir):
+        Database.databasedir = databasedir
+        mkdir(Database.databasedir)
 
     def class_path(self, obj):
         path = sys.modules[obj.__module__].__file__
@@ -88,6 +96,20 @@ class Loader(object):
         if not cls_:
             return module
         return getattr(module, cls_)
+    
+    def list_databases(self):
+        return self._list_databases(self.databasedir)
+    
+    def _list_databases(self, folder):
+        databases = []
+        for f in os.listdir(folder):
+            fn = os.path.join(folder, f, Database.FILENAME)
+            db = Database.from_file(fn)
+            if db:
+                databases.append(db)
+            else:
+                databases += self._list_databases(os.path.join(folder, f))
+        return databases
     
     @staticmethod
     def find_file(filelist, prefix='', suffix=''):

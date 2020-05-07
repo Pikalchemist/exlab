@@ -4,19 +4,27 @@ from exlab.modular.modular import Modular
 from exlab.lab.experiment import Experiment
 
 import sys
+import os
 
 
 class Lab(Modular):
-    def __init__(self, configdir='.', defaults=None, sourcedir=None, help=''):
+    def __init__(self, configdir='.', defaults=None, sourcedir=None, databasedir=None, help=''):
         Modular.__init__(self, 'Lab')
         self.help = help
 
         if type(configdir) is not list:
             configdir = [configdir]
+        if not sourcedir:
+            sourcedir = configdir
         if sourcedir and type(sourcedir) is not list:
             sourcedir = [sourcedir]
         self.configdir = configdir
-        Loader.instance(sourcedir if sourcedir else self.configdir)
+
+        databasedir = databasedir if databasedir else os.path.join(
+            self.configdir[0], 'databases')
+
+        Loader.instance().add_source(sourcedir)
+        Loader.instance().set_databasedir(databasedir)
 
         self.defaults = defaults
         self.experiments = []
