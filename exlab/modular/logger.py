@@ -185,8 +185,8 @@ class Logger(object):
                 level, '{}{}'.format(tag_str, msg), *args, **kwargs)
 
         if self.module and level >= self.level[LoggingKind.EVENTS]:
-            root = self.module.root
-            event = Event(msg, level, root.time, emitter=self.module, tag=tag)
+            event = Event(msg, level, self.module.time,
+                          emitter=self.module, tag=tag)
 
             self.root.record_event(event)
 

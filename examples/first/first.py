@@ -1,4 +1,5 @@
 from exlab.lab import Lab
+from exlab.lab.counter import EpisodeAbsoluteIterationCounter
 from exlab.utils.path import basepath
 
 
@@ -11,5 +12,9 @@ lab.parameter('learner').import_file(['learners', 'learners2'])
 
 lab.filter('learners/*').parameter('dataset').import_key('datasets', 'data.yml')
 
-lab.load()
-lab.run()
+lab.load(counter=EpisodeAbsoluteIterationCounter)
+
+def run(exp):
+    print(exp.config['learner'])
+
+lab.run(run)

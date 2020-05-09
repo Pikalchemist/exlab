@@ -24,7 +24,7 @@ class Module(object):
         self.parent = None
         self.attach(parent)
         
-        self.time = 0
+        self._counter = None
 
         # Logging
         self.logger = Logger(self)
@@ -58,6 +58,9 @@ class Module(object):
     def detached(self):
         if self.logger:
             self.logger.update()
+        
+    def attach_counter(self, counter):
+        self._counter = counter
     
     @property
     def root(self):
@@ -65,6 +68,20 @@ class Module(object):
         while root.parent:
             root = root.parent
         return root
+    
+    @property
+    def counter(self):
+        module = self
+        while module.parent and not module._counter:
+            module = module.parent
+        return module._counter
+    
+    @property
+    def time(self):
+        counter = self.counter
+        if not counter:
+            return -1
+        return counter.t
     
     def all_children(self):
         children = set()

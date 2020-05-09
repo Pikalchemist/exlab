@@ -4,8 +4,13 @@ class Counter(object):
     NO_PAST = 'Cannot go back in the past ! Create a new counter or a new experiment'
     NOT_MODIFIABLE = 'Cannot be modified, please create a new counter'
 
+    T = 't'
+
     def __init__(self, t=0):
         self._t = t
+    
+    def __repr__(self):
+        return f'(_t={self._t})'
     
     @property
     def t(self):
@@ -44,10 +49,15 @@ class NoCounter(Counter):
 
 
 class IterationCounter(Counter):
+    ITERATION = 'iteration'
+
     def __init__(self, iteration=0):
         super(IterationCounter, self).__init__()
         self._iteration = iteration
         self.t = iteration
+    
+    def __repr__(self):
+        return f'(iteration={self._iteration}, _t={self._t})'
 
     @property
     def iteration(self):
@@ -63,6 +73,8 @@ class IterationCounter(Counter):
 
 
 class EpisodeAbsoluteIterationCounter(IterationCounter):
+    EPISODE = 'epsiode'
+
     next_iteration_at_episode_end = False
 
     def __init__(self, iteration=0, episode=0):
@@ -72,6 +84,9 @@ class EpisodeAbsoluteIterationCounter(IterationCounter):
         # Stats
         self._last_iteration = 0
         self.iterations_by_episode = []
+    
+    def __repr__(self):
+        return f'(episode={self._episode}, iteration={self._iteration}, _t={self._t})'
 
     @property
     def episode(self):
@@ -129,15 +144,15 @@ class EpisodeIterationCounter(EpisodeAbsoluteIterationCounter):
         raise Exception(self.NOT_MODIFIABLE)
 
 
-c = EpisodeIterationCounter()
-c.next_iteration()
-c.next_iteration()
-c.next_episode()
-c.next_iteration()
-c.next_episode()
-c.next_iteration()
+# c = EpisodeIterationCounter()
+# c.next_iteration()
+# c.next_iteration()
+# c.next_episode()
+# c.next_iteration()
+# c.next_episode()
+# c.next_iteration()
 
-print(c.t)
-print(c.episode)
-print(c.iteration)
-print(c.iterations_by_episode)
+# print(c.t)
+# print(c.episode)
+# print(c.iteration)
+# print(c.iterations_by_episode)

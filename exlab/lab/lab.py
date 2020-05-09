@@ -29,6 +29,8 @@ class Lab(Modular):
         self.defaults = defaults
         self.experiments = []
         self.config_structure = ConfigStructure()
+
+        self.experiment_class = Experiment
     
     def parameter(self, key):
         return self.config_structure.parameter(key)
@@ -36,13 +38,19 @@ class Lab(Modular):
     def filter(self, name):
         return self.config_structure.filter(name)
     
-    def run(self, thread=False):
+    def run(self, callback=None, thread=False):
         if not self.experiments:
-            raise Exception('No experiment exist in this lab, please use load() first')
+            raise Exception('No experiment exist in this lab, please use Lab.load() first')
         for experiment in self.experiments:
-            experiment.run()
+            experiment.run(callback=callback)
     
-    def load(self, filename=None):
+    def set_experiment_class(self, experiment_class):
+        self.experiment_class = experiment_class
+    
+    def load(self, filename=None, experiment_class=None, counter=None):
+        if experiment_class:
+            self.set_experiment_class(experiment_class)
+
         configs = Config(self.configdir[0], structure=self.config_structure)
         if self.defaults:
             configs.load_file(self.defaults)
@@ -51,5 +59,6 @@ class Lab(Modular):
         configs.load_args(sys.argv[1:])
 
         for config in configs.grid():
-            self.experiments.append(Experiment(self, config))
+            self.experiments.append(self.experiment_class(
+                self, config, counter=counter))
 
