@@ -2,9 +2,10 @@
     Author: Alexandre Manoury
     Python Version: 3.6
 '''
-import exlab.modular.logger as exlogger
-from exlab.interface.database import Database
+from exlab.lab.database import Database
 from exlab.utils.io import mkdir
+
+import exlab.modular.logger as exlogger
 
 import sys
 import os

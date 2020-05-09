@@ -52,7 +52,7 @@ class IterationCounter(Counter):
     ITERATION = 'iteration'
 
     def __init__(self, iteration=0):
-        super(IterationCounter, self).__init__()
+        super().__init__()
         self._iteration = iteration
         self.t = iteration
     
@@ -78,7 +78,7 @@ class EpisodeAbsoluteIterationCounter(IterationCounter):
     next_iteration_at_episode_end = False
 
     def __init__(self, iteration=0, episode=0):
-        super(EpisodeAbsoluteIterationCounter, self).__init__(iteration)
+        super().__init__(iteration)
         self._episode = episode
 
         # Stats
@@ -110,7 +110,7 @@ class EpisodeAbsoluteIterationCounter(IterationCounter):
 
 class EpisodeIterationCounter(EpisodeAbsoluteIterationCounter):
     def __init__(self, t=0, iteration=0, episode=0):
-        super(EpisodeIterationCounter, self).__init__(iteration, episode)
+        super().__init__(iteration, episode)
         self.t = t
     
     def next_iteration(self):

@@ -2,6 +2,7 @@ from exlab.utils.path import ymlbpath, extpath
 from exlab.utils.structure import get_sub_dict_path, get_dict_path, set_dict_path
 from exlab.utils.io import shortid
 from exlab.interface.loader import Loader
+
 import exlab.modular.logger as exlogger
 
 import argparse
@@ -17,7 +18,7 @@ logger.enable_debug2()
 
 class LightConfig(dict):
     def __init__(self, dict_={}, data=None):
-        super(LightConfig, self).__init__(dict_)
+        super().__init__(dict_)
         self.data = data if data else dict_
     
     def update(self, dict_):
@@ -29,7 +30,7 @@ class Config(LightConfig):
     MAX_MULTIVALUES = 100
 
     def __init__(self, basedir='', structure=None, top=True, relativedir='', topdir='', loader=None):
-        super(Config, self).__init__()
+        super().__init__()
         self.top = top
         self.structure = structure if structure else ConfigStructure()
         self.parameters = {}

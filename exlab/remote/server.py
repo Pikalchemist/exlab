@@ -20,7 +20,7 @@ class Server(Modular):
         Creates and starts the flask server in a seperate thread
         :param experiment: The parent module
         """
-        super(Server, self).__init__('Remote server', parent)
+        super().__init__('Remote server', parent)
         self.parent = parent
 
         app = Flask(__name__)

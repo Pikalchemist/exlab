@@ -1,6 +1,6 @@
-import exlab.modular.logger as exlogger
 from exlab.utils import io
 
+import exlab.modular.logger as exlogger
 
 import datetime
 import time
