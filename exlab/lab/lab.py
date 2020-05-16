@@ -1,15 +1,15 @@
 from exlab.interface.config import Config, ConfigStructure
 from exlab.interface.loader import Loader
-from exlab.modular.modular import Modular
+from exlab.modular.module import Module
 from exlab.lab.experiment import Experiment
 
 import sys
 import os
 
 
-class Lab(Modular):
+class Lab(Module):
     def __init__(self, configdir='.', defaults=None, sourcedir=None, databasedir=None, help=''):
-        Modular.__init__(self, 'Lab')
+        Module.__init__(self, 'Lab')
         self.help = help
 
         if type(configdir) is not list:

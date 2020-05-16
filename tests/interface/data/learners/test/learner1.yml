@@ -1,0 +1,11 @@
+__path__: learner.py
+__class__: SerialLearner
+__dict__: true
+name: Learner 1
+obj:
+  __path__: learner.py
+  __class__: Mod
+  __args__: [1, 2, 3]
+  __dict__: true
+  test: Hello
+dataset: ds2

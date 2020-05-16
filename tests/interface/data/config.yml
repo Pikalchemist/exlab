@@ -1,0 +1,6 @@
+name: Hello
+learner: test/learner1
+infos:
+  dataset: ds1
+names:
+  Hello: True

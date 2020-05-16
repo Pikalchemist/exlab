@@ -1,13 +1,14 @@
 import os
+from pathlib import Path
 
 
 def basepath(file_: str, parent: int=0) -> str:
     """
     :return: Base folder, containing the *data*, *src*... folders
     """
-    path = os.path.realpath(file_)
+    path = Path(file_).resolve()
     for _ in range(parent + 1):
-        path = os.path.dirname(path)
+        path = path.parent
     return path
 
 def extpath(path: str, extension: str) -> str:

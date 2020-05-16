@@ -7,6 +7,7 @@ from exlab.utils.io import mkdir
 
 import exlab.modular.logger as exlogger
 
+from pathlib import Path
 import sys
 import os
 
@@ -33,11 +34,11 @@ class Loader(object):
         if self._instance is not None:
             raise Exception('Loader cannot be instantiated twice!')
 
-        self.sourcepath = set()
+        # self.sourcepath = set()
         logger.info('Loader has been init')
 
     @classmethod
-    def instance(cls):
+    def instance(cls) -> 'Loader':
         """
         Get instance
         """
@@ -46,70 +47,103 @@ class Loader(object):
         return cls._instance
     
     @property
+    def sourcepath(self):
+        return [Path(p) for p in sys.path]
+    
+    @property
     def databasedir(self):
         return Database.databasedir
     
     def add_source(self, sourcepath):
         if type(sourcepath) is not list:
             sourcepath = [sourcepath]
+
         added = []
         for path in sourcepath:
             if path:
-                self.sourcepath.add(path)
-                added.append(path)
+                path = Path(path).resolve()
+                if not path.is_dir:
+                    path = path.parent
+                if path not in self.sourcepath:
+                    sys.path.insert(0, str(path))
+                    added.append(path)
             elif path is None:
                 logger.warning('Trying to add None path to the loader')
 
         if added:
             logger.info(
                 'Source folder(s) {} has been added to the loader'.format(added))
+
+    # def register_default_sourcepath(self):
+    #     self.add_source(Path.cwd())
     
     def set_databasedir(self, databasedir):
-        Database.databasedir = databasedir
-        mkdir(Database.databasedir)
+        Database.databasedir = Path(databasedir)
+        Database.databasedir.mkdir(parents=True, exist_ok=True)
 
     def class_path(self, obj):
-        path = sys.modules[obj.__module__].__file__
+        # if not self.sourcepath:
+        #     self.register_default_sourcepath()
+
+        path = Path(sys.modules[obj.__module__].__file__)
 
         for p in self.sourcepath:
-            if path.startswith(p):
-                return path[len(p) + 1:].replace('/', '.').replace('\\', '.')
+            try:
+                relative = path.relative_to(p)
+                return str(relative.with_suffix('')).replace('/', '.').replace('\\', '.')
+            except ValueError:
+                pass
         raise Exception('Trying to save a python file not residing inside the source path.\n' +
                         'May be you have forgotten to update utils.loaders.sourcePath?\n' +
                         'Path: {}'.format(path))
     
 
-    def load_type(self, path, cls_=None, imports=None):
+    def load(self, path, classname=None, imports=None):
+        # if not self.sourcepath:
+        #     self.register_default_sourcepath()
+        if str(path).endswith('.py'):
+            path = str(path)[:-len('.py')]
+
         logger.debug(
-            'Importing {} from {}'.format(cls_, path))
-        path = os.path.splitext(path)[0]
-        selectedName = None
+            'Importing {} from {}'.format(classname, path))
+        filepath = Path(path.replace('.', '/')).with_suffix('.py')
+
+        found = False
         for sp in self.sourcepath:
-            fullpath = os.path.join(sp, path.replace('.', '/') + '.py')
-            if os.path.exists(fullpath):
-                selectedName = path
-        if not selectedName:
-            raise Exception('File {} not found in the source path.\n'.format(path) +
+            if (sp / filepath).exists():
+                found = True
+        if not found:
+            raise Exception('File \'{}\' not found in the source path.\n'.format(filepath) +
+                            'Currently: {}\n'.format(list(map(str, self.sourcepath))) + 
                             'May be you have forgotten to update utils.loaders.sourcePath?')
 
-        imports = imports if imports else [cls_]
-        module = __import__(selectedName.replace('/', '.'), fromlist=imports)
-        if not cls_:
+        imports = imports if imports else [classname]
+        module = __import__(path.replace('/', '.'), fromlist=imports)
+        if not classname:
             return module
-        return getattr(module, cls_)
+        return getattr(module, classname)
+
+    def instantiate(self, path, classname=None, dict_={}, args=(), kwargs={}, serializer=None, imports=None):
+        cls_ = self.load(path, classname=classname, imports=imports)
+        if hasattr(cls_, '_deserialize'):
+            obj = cls_.deserialize(dict_, serializer)
+        else:
+            obj = cls_(*args, **kwargs)
+        return obj
     
     def list_databases(self):
         return self._list_databases(self.databasedir)
     
     def _list_databases(self, folder):
         databases = []
-        for f in os.listdir(folder):
-            fn = os.path.join(folder, f, Database.FILENAME)
+        folder = Path(folder)
+        for f in folder.iterdir():
+            fn = folder / f / Database.FILENAME
             db = Database.from_file(fn)
             if db:
                 databases.append(db)
             else:
-                databases += self._list_databases(os.path.join(folder, f))
+                databases += self._list_databases(folder / f)
         return databases
     
     @staticmethod

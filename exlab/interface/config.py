@@ -2,9 +2,11 @@ from exlab.utils.path import ymlbpath, extpath
 from exlab.utils.structure import get_sub_dict_path, get_dict_path, set_dict_path
 from exlab.utils.io import shortid
 from exlab.interface.loader import Loader
+from exlab.interface.serializer import Serializer
 
 import exlab.modular.logger as exlogger
 
+from pathlib import Path
 import argparse
 import copy
 import yaml
@@ -17,7 +19,8 @@ logger.enable_debug2()
 
 
 class LightConfig(dict):
-    def __init__(self, dict_={}, data=None):
+    def __init__(self, dict_=None, data=None):
+        dict_ = dict_ if dict_ is not None else {}
         super().__init__(dict_)
         self.data = data if data else dict_
     
@@ -36,24 +39,26 @@ class Config(LightConfig):
         self.parameters = {}
         self.multivalues = {}
 
-        self.basedir = basedir
-        self.topdir = topdir if topdir else basedir
-        self.relativedir = relativedir
+        self.basedir = Path(basedir)
+        self.topdir = Path(topdir if topdir else basedir)
+        self.relativedir = Path(relativedir)
     
         self.loader = loader
+        self.serializer = None
 
         logger.debug('#{} config file created, basedir {}'.format(
             shortid(self), self.basedir))
 
     def load_file(self, filename):
         logger.debug2('#{} load file {}'.format(shortid(self), filename))
+        filename = Path(filename)
 
         data = self._load_data_from_file(filename)
         self.update(data)
         self._load_parameters(filename)
 
     def _load_data_from_file(self, filename):
-        filename = ymlbpath(self.basedir, filename)
+        filename = self.basedir / Path(filename).with_suffix('.yml')
         try:
             with open(filename) as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
@@ -124,7 +129,7 @@ class Config(LightConfig):
         return config
 
     def _load_parameters(self, filename=None):
-        parameters = self.structure.retrieve_parameters(self.top, os.path.join(self.relativedir, filename) if filename else None)
+        parameters = self.structure.retrieve_parameters(self.top, self.relativedir / filename if filename else None)
         logger.debug2(
             '#{} parameters {}'.format(shortid(self), parameters))
 
@@ -153,11 +158,10 @@ class Config(LightConfig):
                     if parameter._file:
                         if isinstance(sdict[skey], (str, int)):
                             folder = Loader.find_file(
-                                parameter._file, prefix=self.basedir, suffix=extpath(sdict[skey], 'yml'))
-                            config = Config(os.path.join(
-                                self.basedir, folder),
+                                parameter._file, prefix=self.basedir, suffix=Path(sdict[skey]).with_suffix('.yml'))
+                            config = Config(self.basedir / folder,
                                 topdir=self.topdir,
-                                relativedir=os.path.join(self.relativedir, folder),
+                                relativedir=self.relativedir / folder,
                                 structure=self.structure, top=False)
                             config.load_file(sdict[skey])
                             sdict[skey] = config
@@ -169,9 +173,18 @@ class Config(LightConfig):
         if not loader:
             loader = Loader.instance()
         self.loader = loader
+        self.serializer = Serializer()
 
         self.data = copy.deepcopy(self)
-        dict.update(self, self._walk_populate(self))
+
+        top = self._walk_populate(self)
+        if not isinstance(top, dict):
+            # An object has been populated at top level
+            top = {'object': top}
+            self.clear()
+        dict.update(self, top)
+
+        return self
 
     def _walk_dict(self, data):
         if type(data) is dict:
@@ -234,13 +247,11 @@ class Config(LightConfig):
 
         logger.debug2(
             '#{} object {} import from {}'.format(shortid(self), classname, path))
-
-        cls_ = self.loader.load_type(path, classname)
-
         logger.debug2(
             '#{} instantiate {} with parameters {} and {}'.format(shortid(self), classname, args, kwargs))
-
-        obj = cls_(*args, **kwargs)
+        
+        obj = self.loader.instantiate(
+            path, classname, dict_=arg_data, args=args, kwargs=kwargs, serializer=self.serializer)
         return obj
 
 
@@ -258,6 +269,7 @@ class ConfigStructure(object):
         logger.debug2(
             'Looking up parameters for {}'.format(filename))
         parameters = {}
+        filename = Path(filename)
         if top or (filename and self.matches(filename)):
             parameters.update(self.parameters)
         for child in self.children:
@@ -265,18 +277,20 @@ class ConfigStructure(object):
         return parameters
     
     def filter(self, filename):
+        filename = Path(filename)
         matches = self.find_matches(filename, strict=True)
         if matches:
             return matches[0]
         return ConfigStructure(filename, self)
 
     def matches(self, filename, strict=False):
-        filename = filename.replace('\\', '/')
+        # filename = filename.replace('\\', '/')
         if self._filter is None:
             return False
         if strict:
             return filename == self._filter
-        return re.match(self._filter.replace('/', r'\/').replace('*', '(.*)'), filename)
+        return filename.match(self._filter)
+        # return re.match(self._filter.replace('/', r'\/').replace('*', '(.*)'), filename)
 
     def find_matches(self, filename, strict=False):
         return [child for child in self.children if child.matches(filename, strict=strict)]

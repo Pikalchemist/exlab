@@ -6,25 +6,26 @@
 import os
 from enum import Enum
 import numpy as np
+import copy
 
 
-def serialize(instance, keys, refkeys=[], exportPathType=False, options={}):
-    dict_ = {}
+# def serialize(instance, keys, refkeys=[], exportPathType=False, options={}):
+#     dict_ = {}
 
-    if exportPathType:
-        from exlab.interface.loader import Loader
-        dict_['type'] = instance.__class__.__name__
-        dict_['path'] = os.path.splitext(Loader.instance().classPath(instance))[0]
-    for key in keys:
-        attr = getattr(instance, key)
-        if attr is not None:
-            dict_[key] = attr
-    for key in refkeys:
-        attr = getattr(instance, key)
-        if attr is not None:
-            dict_[key] = attr.primary_key()
+#     if exportPathType:
+#         from exlab.interface.loader import Loader
+#         dict_['type'] = instance.__class__.__name__
+#         dict_['path'] = os.path.splitext(Loader.instance().classPath(instance))[0]
+#     for key in keys:
+#         attr = getattr(instance, key)
+#         if attr is not None:
+#             dict_[key] = attr
+#     for key in refkeys:
+#         attr = getattr(instance, key)
+#         if attr is not None:
+#             dict_[key] = attr.primary_key()
 
-    return Serializer.serialize_data(dict_, options=options)
+#     return Serializer.serialize_data(dict_, options=options)
 
 
 class Serializer(object):
@@ -33,107 +34,96 @@ class Serializer(object):
                   'Circular dependencies.'
     SERIALIZER = 'serializer'
 
-    def __init__(self):
-        self.objects = {}
+    def __init__(self, root=None, options=None):
+        # self.objects = {}
+        self.root = root if root else self
         self.ids = {}
 
-    def add(self, obj, gid=None):
-        if not gid and hasattr(obj, 'gid'):
-            gid = obj.gid()
-        if gid:
-            if self.get(gid):
-                raise Exception(self.GID_ALREADY_DEFINED.format(gid, self.get(gid), obj))
-            self.objects[gid] = obj
+        self._data = {}
 
-        # check ids
-        if self.ids.get(id(obj)):
-            raise Exception(self.GID_MISSING.format(obj))
-        self.ids[id(obj)] = obj
+        self.options = {}
+        if self.root is not self:
+            self.options = copy.copy(self.root.options)
+        if options:
+            self.options.update(options)
 
-    def get(self, gid):
-        return self.objects.get(gid)
+    def add(self, obj, id_=None):
+        id_ = id_ if id_ else id(obj)
+        self.root.ids[id_] = obj
 
-    @classmethod
-    def create_options(cls):
-        options = {
-            cls.SERIALIZER: cls()
-        }
-        return options
+    def get(self, id_):
+        return self.root.ids.get(id_)
+    
+    def clone(self, options=None):
+        return self.__class__(self, options)
+    
+    @property
+    def data(self):
+        return self.root._data
 
-    @classmethod
-    def serializer(cls, options):
-        return options.get(cls.SERIALIZER)
+    # @staticmethod
+    # def make_gid(instance, *args):
+    #     return '{}::({})'.format(instance.__class__.__name__, '|'.join(map(str, args)))
 
-    @staticmethod
-    def make_gid(instance, *args):
-        return '{}::({})'.format(instance.__class__.__name__, '|'.join(map(str, args)))
+    # @staticmethod
+    # def make_gid_from_cid(instance, cid):
+    #     return '{}::#({})'.format(instance.__class__.__name__, cid)
 
-    @staticmethod
-    def make_gid_from_cid(instance, cid):
-        return '{}::#({})'.format(instance.__class__.__name__, cid)
-
-    @classmethod
-    def serialize(cls, instance, keys=[], refkeys=[], exportPathType=True, options={}):
+    def serialize(self, instance, keys=[], refkeys=[], export_path_type=True):
         dict_ = {}
 
-        if exportPathType:
+        if export_path_type:
             from exlab.interface.loader import Loader
-            dict_['type'] = instance.__class__.__name__
-            dict_['path'] = os.path.splitext(Loader.instance().classPath(instance))[0]
+            dict_['__class__'] = instance.__class__.__name__
+            dict_['__path__'] = Loader.instance().class_path(instance)
+            dict_['__dict__'] = True
 
-        keys += ['cid', 'gid']
-        for key in keys:
-            attr = getattr(instance, key)
-            if callable(attr):
-                attr = attr()
-            if attr is not None:
-                dict_[key.lstrip('_')] = attr
+        dict_['__id__'] = id(instance)
 
-        for key in refkeys:
-            attr = getattr(instance, key)
-            if attr is not None:
-                dict_[key] = attr.primary_key()
+        for keylist, onlyid in ((keys, False), (refkeys, True)):
+            for key in keylist:
+                attr = getattr(instance, key)
+                if callable(attr):
+                    attr = attr()
+                if attr is not None:
+                    dict_[key.lstrip('_')] = {'__id__': '@' + str(id(attr))} if onlyid else attr
 
-        return cls.serialize_data(dict_, options=options)
+        return self.serialize_data(dict_)
 
-    @classmethod
-    def serialize_key(cls, x, options={}):
-        if hasattr(x, 'gid'):
-            gid = x.gid()
-            if gid:
-                return gid
+    def serialize_key(self, x):
+        t = type(x)
+        if t in (int, str, float, bool):
+            return x
 
-        return str(x)
+        return '@' + id(x)
 
-    @classmethod
-    def serialize_data(cls, x, options={}):
+    def serialize_data(self, x):
         t = type(x)
 
         if t in (int, str, float, bool):
             return x
         if t in (list, tuple, set):
-            return t([cls.serialize_data(v, options=options) for v in x])
+            return t([self.serialize_data(v) for v in x])
         if t in (dict,):
-            return {cls.serialize_key(k, options=options): cls.serialize_data(v, options=options) for k, v in x.items()}
+            return {self.serialize_key(k): self.serialize_data(v) for k, v in x.items()}
         if isinstance(x, Enum):
             return x.value
-        if type(x).__module__ == np.__name__:
+        if t.__module__ == np.__name__:
             return x.tolist()
         if hasattr(x, 'serialize'):
-            return x.serialize(options=options)
+            return x.serialize(serializer=self)
 
         return x
 
-    @classmethod
-    def deserialize(cls, dict_, *args, options={}, context=[], **kwargs):
+    def deserialize(self, dict_, *args, context=[], **kwargs):
         if type(dict_) in (list, tuple, set):
-            return [cls.deserialize(x, *args, options=options, context=context, **kwargs) for x in dict_]
+            return [self.deserialize(x, *args, context=context, **kwargs) for x in dict_]
         if not type(dict_) in (dict,):
             return dict_
 
         from exlab.interface.loader import Loader
-        cls = Loader.instance().loadType(dict_['path'], dict_['type'])
-        return cls.deserialize(dict_, *args, options=options, context=context, **kwargs)
+        self = Loader.instance().load(dict_['path'], dict_['type'])
+        return self.deserialize(dict_, *args, context=context, **kwargs)
 
 
 def getReference(caption, type_='', id_data=''):
@@ -141,46 +131,42 @@ def getReference(caption, type_='', id_data=''):
 
 
 class Serializable(object):
-    def cid(self):
-        return None
+    # def _guid(self):
+    #     return None
 
-    def gid(self):
-        if self.cid():
-            return Serializer.make_gid_from_cid(self, self.cid())
-        return None
+    # def gid(self):
+    #     if self.cid():
+    #         return Serializer.make_gid_from_cid(self, self.cid())
+    #     return None
 
-    def _serialize(self, options):
-        pass
+    def _serialize(self, serializer):
+        return {}
 
     @classmethod
-    def _deserialize(cls, dict_, options, obj=None):
+    def _deserialize(cls, dict_, serializer, obj=None):
         pass
 
-    def serialize(self, options=None):
-        options = options if options else Serializer.create_options()
-        serializer = Serializer.serializer(options)
-        if self.gid() and serializer.get(self.gid()):
-            return {'gid': self.gid(), '--import': 'gid-only'}
-        # print('Serial {}'.format(self.__class__))
+    def serialize(self, serializer=None):
+        serializer = serializer if serializer is not None else Serializer()
+        if serializer.get(id(self)):
+            return {'__id__': '@' + str(id(self))}
         serializer.add(self)
 
-        dict_ = self._serialize(options)
+        dict_ = self._serialize(serializer)
 
         return dict_
 
     @classmethod
-    def deserialize(cls, dict_, *args, options=None, context=[], **kwargs):
-        options = options if options else Serializer.create_options()
-        serializer = Serializer.serializer(options)
+    def deserialize(cls, dict_, serializer=None):
+        serializer = serializer if serializer is not None else Serializer()
 
-        for entity in context:
-            entity.serialize(options=options)
+        id_ = dict_.get('__id__')
+        if id_ and id_[0] == '@':
+            id_ = id_[1:]
+            if serializer.get(id_):
+                return serializer.get(id_)
 
-        gid = dict_.get('gid')
-        if gid and serializer.get(gid):
-            return serializer.get(gid)
+        obj = cls._deserialize(dict_, serializer)
 
-        obj = cls._deserialize(dict_, *args, options=options, **kwargs)
-
-        serializer.add(obj, gid=gid)
+        serializer.add(obj, id_=id_)
         return obj

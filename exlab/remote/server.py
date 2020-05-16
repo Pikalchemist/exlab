@@ -3,7 +3,7 @@
     Python Version: 3.6
 '''
 
-from exlab.modular.modular import Modular
+from exlab.modular.module import Module
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -12,7 +12,7 @@ import threading
 import copy
 
 
-class Server(Modular):
+class Server(Module):
     PORT = 25010
 
     def __init__(self, parent=None):
