@@ -1,6 +1,8 @@
 
 
 class Node(object):
+    _activated = None
+
     def __init__(self, host, parent=None):
         self.host = host
         self._counter = None
@@ -9,11 +11,14 @@ class Node(object):
         self.children = None
         self.parent = None
         if parent is not None and not isinstance(parent, Node):
-            parent = parent.host
+            parent = parent._exlab_manager
         self.attach(parent)
     
     def __repr__(self):
         return f'{self.__class__.__name__}:{self.host}'
+
+    def activate(self):
+        Node._activated = self
 
     def attach(self, parent):
         if parent is None or parent == self:
@@ -35,19 +40,37 @@ class Node(object):
 
     def attach_counter(self, counter):
         self._counter = counter
+        self.activate()
+    
+    def parents(self):
+        node = self
+        parents = set([node])
+        while node.parent:
+            node = node.parent
+            parents.add(node)
+        return parents
+    
+    def effective_parent(self):
+        if self.parent:
+            return self.parent
+        if not Node._activated or self in Node._activated.parents():
+            return None
+        return Node._activated
 
     @property
     def root(self):
         root = self
-        while root.parent:
-            root = root.parent
+        while root.effective_parent():
+            root = root.effective_parent()
         return root
 
     @property
     def counter(self):
         node = self
-        while node.parent and not node._counter:
-            node = node.parent
+        while node.effective_parent():
+            node = node.effective_parent()
+            if node._counter:
+                return node._counter
         return node._counter
     
     @property
@@ -56,6 +79,10 @@ class Node(object):
         if not counter:
             return -1
         return counter.t
+    
+    @staticmethod
+    def activated():
+        return Node._activated
 
 
 class NodeWithChildren(Node):

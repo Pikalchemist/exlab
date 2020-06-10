@@ -7,3 +7,5 @@ class HyperParameter(object):
         self.help = help
         self.range = range
         self.how_to_choose = how_to_choose
+
+

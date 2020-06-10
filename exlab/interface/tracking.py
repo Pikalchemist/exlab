@@ -6,23 +6,34 @@ class Tracking(object):
     ADD = 1
     DELETE = 2
 
-    def __init__(self, tracker, host, save_initial_value=True):
+    def __init__(self, sync, tracker=None, save_initial_value=True, getter=None):
         self.tracker = tracker
-        self.host = host
+        self.sync = sync
         self.records = {}
+        self.getter = getter
+
         if save_initial_value:
-            self.track()
-    
-    def track(self):
-        self.event(Tracking.CHANGE, self.tracker._object)
-    
-    def event(self, event_type, key=None, element=None):
-        counter = self.counter
-        index = self.counter.t + 1 if counter is not None else -1
+            self.track(initial=True)
+
+    def track(self, element=None, initial=False):
+        element = element if element else (self.getter() if self.getter else None)
+        if element is not None:
+            self.event(Tracking.CHANGE, element, initial=initial)
+
+    def event(self, event_type, element=None, key=None, initial=False):
+        if not self.counter:
+            return
+
+        index = self.counter.t + (0 if initial else 1)
         if index not in self.records or event_type == Tracking.CHANGE:
             self.records[index] = []
         self.records[index].append((event_type, key, element))
     
+    # def attached(self):
+    #     if self.save_initial_value:
+    #         self.track(initial=True)
+    #         self.save_initial_value = False
+
     def attach(self, new_tracker):
         t = copy.copy(self)
         t.tracker = new_tracker
@@ -30,14 +41,32 @@ class Tracking(object):
 
     @property
     def root(self):
-        root = self.host
+        root = self.sync
         while root.parent:
             root = root.parent
         return root
 
     @property
     def counter(self):
-        return self.host.counter
+        return self.sync.counter
+
+
+class AttributeTracker(object):
+    def __init__(self, host, name, object_):
+        self.host = host
+        self.name = name
+        self.object = object_
+        self._tracking = Tracking(self.host._exlab_manager, getter=self.getter)
+
+    def getter(self, instance=None):
+        return self.object
+
+    def setter(self, instance, value):
+        self.object = value
+        self._tracking.event(Tracking.CHANGE, self.object)
+    
+    # def attached(self):
+    #     self._tracking.attached()
 
 
 class GenericTracker(object):

@@ -1,41 +1,55 @@
 
 
-class AttributeWrapper(object):
-    def __init__(self, baseObject):
-        self.__class__ = type(baseObject.__class__.__name__,
-                              (self.__class__, baseObject.__class__),
-                              {})
-        self.__dict__ = baseObject.__dict__
+# class AttributeWrapper(object):
+#     def __init__(self, baseObject):
+#         self.__class__ = type(baseObject.__class__.__name__,
+#                               (self.__class__, baseObject.__class__),
+#                               {})
+#         # self.__dict__ = baseObject.__dict__
 
-        self._tracking = True
+#         self._tracking = True
 
 
 class Attribute(object):
-    def __init__(self, name, editable=False, index=None):
+    def __init__(self, name, is_class_attribute):
         self.name = name
+        self.is_class_attribute = is_class_attribute
+
+    def make_accessible(self, editable=False, index=None):
         self.editable = editable
         self.index = index
+    
+    def set_hyperparameter(self, help_=None, range_=None, how_to_choose=None):
+        self.help = help_
+        self.range = range_
+        self.how_to_choose = how_to_choose
+        
 
     def __repr__(self):
         return f'Attribute.{self.name}'
 
 
-def attribute(attr):
-    print(id(attr))
+# def attribute(attr):
+#     print(id(attr))
 
 
-def track():
-    return None
+# def track():
+#     return None
 
 
-class Test(object):
-    def __init__(self):
-        self.a: track() = Attribute('test')
-        print(id(self.a))
-        attribute(self.a)
-        print(self.__init__.__annotations__)
+# class Test(object):
+#     def __init__(self):
+#         self.a: track() = Attribute('test')
+#         print(id(self.a))
+#         attribute(self.a)
+#         print(self.__init__.__annotations__)
 
-test = Test()
+# test = Test()
+
+# a = 15
+# b = AttributeWrapper(a)
+# print(a)
+# print(b)
 
 
 # wrap = Wrapper(test)

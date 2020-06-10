@@ -1,16 +1,16 @@
 from exlab.modular.logger import Logger
 from exlab.modular.node import NodeWithChildren
-from exlab.modular.syncable import Syncable
+from exlab.modular.syncable import Syncable, manage
 
 
 class Module(Syncable):
     def __init__(self, name='', parent=None):
-        self._module = Module.Modular(self, name, parent)
-        self._sync = self._module
+        self._exlab_manager = Module.Modular(self, name, parent)
+        # self._sync = self._module
 
     @property
     def logger(self):
-        return self._module.logger
+        return self._exlab_manager.logger
 
     class Modular(Syncable.Sync, NodeWithChildren):
         def __init__(self, host, name: str = '', parent=None):
@@ -38,6 +38,10 @@ class Module(Syncable):
         def detached(self):
             if self.logger:
                 self.logger.update()
+
+
+# def module(instance):
+#     return instance._module
 
 
 if __name__ == '__main__':
