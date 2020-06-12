@@ -42,8 +42,6 @@ class Agent(Syncable):
         manage(self).set_hyperparameter(self.growing_rate, help_='Growing rate of each agent += at each timestamp')
         manage(self).set_hyperparameter(self.K, help_='Growing rate of each agent += at each timestamp', range_='positive', how_to_choose='arbitrary')
 
-        # self.sync.make_accessible('age', editable=True)
-
         # self.a = np.random.uniform(0, 1, 10)
         # self.salaries = self.sync.track
         # self.remote.sync('a', index=EpisodeAbsoluteIterationCounter.EPISODE)
@@ -52,24 +50,34 @@ class Agent(Syncable):
         print(f'Step {self.age}')
         self.age += self.growing_rate + self.age * self.K
         self.ages.append(self.age)
-
-    # def step(self):
-    #     self.age.object += self.GROWING_RATE
-
-    # @remote.sync.attribute('a', EpisodeAbsoluteIterationCounter.EPISODE)
-    # def sync_a(self):
+        if len(self.ages) > 2:
+            # self.ages.remove(self.ages[0])
+            self.ages.pop()
+            # self.ages = self.ages[1:]
 
     # @remote.graph
-    # def view_a(self, graph):
-    #     graph.plot(self.a)
+    def view_age(self, graph):
+        graph.plot(self.ages)
 
 
 tr = TestRemote()
 tr.step()
 tr.step()
 tr.step()
+tr.step()
+
 print(manage(tr.agent).get_tracking(tr.agent.age).records)
+print(manage(tr.agent).get_tracking(tr.agent.age).objects)
+print(manage(tr.agent).get_tracking(tr.agent.age).attached)
+
 print(manage(tr.agent).get_tracking(tr.agent.ages).records)
+print(manage(tr.agent).get_tracking(tr.agent.ages).objects)
+print(manage(tr.agent).get_tracking(tr.agent.ages).attached)
+
+print(tr.agent.ages._tracking.records)
+print(tr.agent.ages._tracking.objects)
+print(tr.agent.ages._tracking.attached)
+
 # print(tr)
 # print(tr.module.counter)
 # print(tr.agent.sync.root)

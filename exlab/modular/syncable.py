@@ -77,7 +77,7 @@ class Syncable(object):
                     raise Exception(
                         'Cannot track class attribute, please use an instance attribute instead.')
                 if name:
-                    tracker = AttributeTracker(self.host, name, attribute)
+                    tracker = AttributeTracker(self, name, attribute)
                     self.trackings[name] = tracker
 
                     setattr(self.host, name, None)

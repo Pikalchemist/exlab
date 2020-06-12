@@ -6,6 +6,7 @@ class Node(object):
     def __init__(self, host, parent=None):
         self.host = host
         self._counter = None
+        self._serializer = None
 
         # Hierarchy
         self.children = None
@@ -15,10 +16,11 @@ class Node(object):
         self.attach(parent)
     
     def __repr__(self):
-        return f'{self.__class__.__name__}:{self.host}'
+        return f'{self.__class__.__name__}Manager:{self.host}'
 
     def activate(self):
         Node._activated = self
+        self.attach_serializer()
 
     def attach(self, parent):
         if parent is None or parent == self:
@@ -37,6 +39,13 @@ class Node(object):
 
     def detached(self):
         pass
+
+    def attach_serializer(self, serializer=None):
+        if serializer:
+            self._serializer = serializer
+        elif not self._serializer:
+            from exlab.interface.serializer import Serializer
+            self._serializer = Serializer()
 
     def attach_counter(self, counter):
         self._counter = counter
@@ -72,6 +81,15 @@ class Node(object):
             if node._counter:
                 return node._counter
         return node._counter
+    
+    @property
+    def serializer(self):
+        node = self
+        while node.effective_parent():
+            node = node.effective_parent()
+            if node._serializer:
+                return node._serializer
+        return node._serializer
     
     @property
     def time(self):
