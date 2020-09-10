@@ -1,9 +1,10 @@
 from exlab.modular.logger import Logger
 from exlab.modular.node import NodeWithChildren
 from exlab.modular.syncable import Syncable, manage
+from exlab.interface.serializer import Serializable
 
 
-class Module(Syncable):
+class Module(Syncable, Serializable):
     def __init__(self, name='', parent=None):
         self._exlab_manager = Module.Modular(self, name, parent)
         # self._sync = self._module

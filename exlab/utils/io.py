@@ -29,6 +29,16 @@ class Colors(Enum):
     RESET = '\033[0m'
 
 
+def colorText(txt, color, style='terminal'):
+    if style == 'html':
+        if color == Colors.NORMAL or color == Colors.RESET:
+            return txt
+        else:
+            return '<font color=\'{}\'>{}</font>'.format(color.name.lower(), txt)
+    else:
+        return '{}{}{}'.format(color.value, txt, Colors.RESET.value)
+
+
 def shortid(instance, length=4):
     return str(id(instance))[-length:]
 
