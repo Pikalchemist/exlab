@@ -18,3 +18,6 @@ class Ensemble(object):
         if isinstance(self.data, list):
             return self.data
         return list(self.data.values())
+    
+    def __getitem__(self, id_):
+        return self.values()[id_]
