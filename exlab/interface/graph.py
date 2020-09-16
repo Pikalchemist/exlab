@@ -3,6 +3,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 
+def display(graph):
+    return Visual().display(graph)
+
+
 class Visual(object):
     def __init__(self, server=None):
         # self.server = server if server else Server()
@@ -14,9 +18,12 @@ class Visual(object):
 
 
 class Graph(object):
-    def __init__(self):
+    def __init__(self, *items):
         super().__init__()
-        self.items = []
+        self.items = list(items)
+    
+    def __add__(self, other):
+        return self.__class__(*(self.items + other.items))
     
     def display(self, visual):
         visual.ax = visual.fig.add_subplot(1, 1, 1)
@@ -41,8 +48,12 @@ class PlotItem(GraphItem):
     def __init__(self, *data, **options):
         super().__init__()
         self.data = data
+        self.dim = len(self.data)
         self.options = options
     
     def display(self, visual):
         plt.xlabel('Iteration')
-        visual.ax.plot(self.data[0])
+        if self.dim == 1:
+            visual.ax.plot(self.data[0])
+        elif self.dim == 2:
+            visual.ax.plot(self.data[0], self.data[1])
