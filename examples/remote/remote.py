@@ -3,6 +3,7 @@ from exlab.lab.counter import EpisodeAbsoluteIterationCounter
 from exlab.modular.module import Module
 from exlab.modular.syncable import Syncable, manage
 from exlab.formal.parameter import HyperParameter
+from exlab.interface.tracking import get_tracking
 
 import numpy as np
 
@@ -57,7 +58,7 @@ class Agent(Syncable):
 
     # @remote.graph
     def view_age(self, graph):
-        graph.plot(self.ages)
+        return graph.plot(self.age)
 
 
 tr = TestRemote()
@@ -74,9 +75,9 @@ print(manage(tr.agent).get_tracking(tr.agent.ages).records)
 print(manage(tr.agent).get_tracking(tr.agent.ages).objects)
 print(manage(tr.agent).get_tracking(tr.agent.ages).attached)
 
-print(tr.agent.ages._tracking.records)
-print(tr.agent.ages._tracking.objects)
-print(tr.agent.ages._tracking.attached)
+print(get_tracking(tr.agent.ages).records)
+print(get_tracking(tr.agent.ages).objects)
+print(get_tracking(tr.agent.ages).attached)
 
 # print(tr)
 # print(tr.module.counter)

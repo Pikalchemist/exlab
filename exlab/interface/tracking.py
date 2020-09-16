@@ -181,6 +181,9 @@ class ListTracker(list, GenericTracker):
         self._tracking.event(Tracking.DELETE, key=i)
 
 
+def get_tracking(obj):
+    return obj._tracking
+
 
 
 # class WrapperAutoTracker(GenericTracker):
