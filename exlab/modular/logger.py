@@ -1,4 +1,4 @@
-from exlab.utils.io import Colors
+from exlab.utils.text import Colors
 from enum import Enum
 
 import coloredlogs
