@@ -14,8 +14,8 @@ import os
 import re
 
 
-logger = exlogger.getLogger('config', tag='CONF')
-logger.enable_debug2()
+logger = exlogger.ProxyLogger(tag='CONF')
+logger.displayDebug2()
 
 
 class LightConfig(dict):

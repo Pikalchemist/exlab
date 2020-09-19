@@ -1,4 +1,4 @@
-from exlab.modular.logger import Logger
+from exlab.modular.logger import ProxyLogger
 from exlab.modular.node import NodeWithChildren
 from exlab.modular.syncable import Syncable, manage
 from exlab.interface.serializer import Serializable
@@ -22,8 +22,8 @@ class Module(Syncable, Serializable):
             self.name = name if name else self.host.__class__.__name__
 
             # Logging
-            self.logger = Logger(self)
-            self.logger.info('Module \'{}\' has been started'.format(self.name))
+            self.logger = ProxyLogger(self)
+            self.logger.info('Module \'{}\' has been started'.format(self.name), tag='Modular')
         
         @property
         def children_modules(self):
@@ -32,13 +32,14 @@ class Module(Syncable, Serializable):
         def attached(self):
             super()
             if self.logger:
-                self.logger.update()
+                # self.logger.update()
                 self.logger.info('Module \'{}\' has been attached to \'{}\''.format(
-                    self.name, self.parent.name))
+                    self.name, self.parent.name), tag='Modular')
 
         def detached(self):
-            if self.logger:
-                self.logger.update()
+            pass
+            # if self.logger:
+            #     self.logger.update()
 
 
 # def module(instance):

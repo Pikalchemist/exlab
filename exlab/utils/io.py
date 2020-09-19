@@ -5,6 +5,10 @@ import os
 import subprocess
 
 
+def parameter(var, default=None):
+    return var if var is not None else default
+
+
 def shortid(instance, length=4):
     return str(id(instance))[-length:]
 
