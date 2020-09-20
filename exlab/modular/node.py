@@ -11,10 +11,8 @@ class Node(object):
         # Hierarchy
         self.children = None
         self.parent = None
-        if parent is not None and not isinstance(parent, Node):
-            parent = parent._exlab_manager
         self.attach(parent)
-    
+
     def __repr__(self):
         return f'{self.__class__.__name__}Manager:{self.host}'
 
@@ -23,6 +21,8 @@ class Node(object):
         self.attach_serializer()
 
     def attach(self, parent):
+        if parent is not None and not isinstance(parent, Node):
+            parent = parent._exlab_manager
         if parent is None or parent == self:
             return
         if self.parent:
@@ -77,11 +77,11 @@ class Node(object):
     def counter(self):
         node = self
         while node.effective_parent():
-            node = node.effective_parent()
             if node._counter:
                 return node._counter
+            node = node.effective_parent()
         return node._counter
-    
+
     @property
     def serializer(self):
         node = self
@@ -90,7 +90,7 @@ class Node(object):
             if node._serializer:
                 return node._serializer
         return node._serializer
-    
+
     @property
     def time(self):
         counter = self.counter

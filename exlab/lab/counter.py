@@ -1,29 +1,34 @@
 
 
-class Counter(object):
-    NO_PAST = 'Cannot go back in the past ! Create a new counter or a new experiment'
+class BaseCounter(object):
+    NO_PAST = 'Cannot go back in the past! Create a new counter or a new experiment'
     NOT_MODIFIABLE = 'Cannot be modified, please create a new counter'
+    NO_PARENT = 'Cannot sync counter of a module without parent!'
 
     T = 't'
+    MODIFIABLE = True
 
     def __init__(self, t=0):
         self._t = t
-    
-    def __repr__(self):
-        return f'(_t={self._t})'
-    
+
     @property
     def t(self):
         return self._t
-
+    
     @t.setter
     def t(self, t):
+        if not self.MODIFIABLE:
+            raise ValueError(self.MODIFIABLE)
         if t < self._t:
             raise ValueError(self.NO_PAST)
         self._t = t
 
-    def next_timestep(self):
-        self._t += 1
+    @property
+    def last(self):
+        return self._t - 1
+
+    def __repr__(self):
+        return f'(_t={self._t})'
 
     def __lt__(self, other):
         return self._t < other._t
@@ -44,8 +49,27 @@ class Counter(object):
         return self._t != other._t
 
 
+class Counter(BaseCounter):
+    def next_timestep(self):
+        self._t += 1
+
+
 class NoCounter(Counter):
     pass
+
+
+class AsyncCounter(BaseCounter):
+    MODIFIABLE = False
+
+    def __init__(self, module):
+        super().__init__()
+        self.node = module._exlab_manager
+        self.sync()
+
+    def sync(self):
+        if self.node.parent is None:
+            raise Exception(self.NO_PARENT)
+        self._t = self.node.parent.counter.t
 
 
 class IterationCounter(Counter):

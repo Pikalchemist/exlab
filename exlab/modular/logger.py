@@ -139,17 +139,18 @@ class Logger(object):
         _, levels = self.matchingTag(tag)
 
         # Recording (to memory)
-        if level > levels[0]:
+        if level >= levels[0] and levels[0] >= 0:
             self.addEvent(msg, level, *args, tag=tag, **kwargs)
         kwargs.pop('module', '')
 
         tagStr = f'[{tag}] ' if tag else ''
         # Displaying
-        if level > levels[1]:
+        if level >= levels[1] and levels[1] >= 0:
             self.loggerTerminal.log(level, f'{tagStr}{msg}', *args, **kwargs)
         # Saving (to file)
-        if level > levels[2]:
-            self.loggerTerminal.log(level, f'{tagStr}{msg}', *args, **kwargs)
+        if level >= levels[2] and levels[2] >= 0:
+            pass
+            # self.loggerTerminal.log(level, f'{tagStr}{msg}', *args, **kwargs)
     
     def debug2(self, msg, *args, **kwargs):
         return self.log(msg, self.DEBUG2, *args, **kwargs)
@@ -269,7 +270,7 @@ class Event(object):
 
     def matches(self, search=None, tag=None):
         if search:
-            return sum(search in data for data in self.data()) > 0
+            return sum(search in str(data) for data in self.data()) > 0
         if tag:
             return self.tag.startswith(tag)
         return False
@@ -279,7 +280,7 @@ class Event(object):
         return (self.time, logging.getLevelName(self.level), self.tag, name, self.message)
 
     def __repr__(self):
-        return f'@{self.time} {''} [{self.tag}] {self.message}'
+        return f'@{self.time} [{self.tag}] {self.message}'
 
 
 
