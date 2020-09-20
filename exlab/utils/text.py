@@ -29,9 +29,9 @@ def colorText(txt, color, style='terminal'):
         if color == Colors.NORMAL or color == Colors.RESET:
             return txt
         else:
-            return '<font color=\'{}\'>{}</font>'.format(color.name.lower(), txt)
+            return f'<font color=\'{color.name.lower()}\'>{txt}</font>'
     else:
-        return '{}{}{}'.format(color.value, txt, Colors.RESET.value)
+        return f'{color.value}{txt}{Colors.RESET.value}'
 
 
 def strtab(s):

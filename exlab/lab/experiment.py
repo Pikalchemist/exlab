@@ -14,12 +14,12 @@ class Experiment(Module):
         # Logging
         self.logger.enable_debug2()
         self.logger.info(
-            '#{} Creating a new experiment'.format(shortid(self)), tag='EXP')
+            f'#{shortid(self)} Creating a new experiment', tag='EXP')
         self.logger.debug2(
-            'with config {}'.format(self.config), tag='EXP')
+            f'with config {self.config}', tag='EXP')
         if database:
             self.logger.info(
-                'loading database {}'.format(database), tag='EXP')
+                f'loading database {database}', tag='EXP')
         else:
             database = Database.from_experiment(self)
 
@@ -28,7 +28,7 @@ class Experiment(Module):
         # Init counter
         manage(self).attach_counter(counter())
         self.logger.info(
-            'Starting with counter {}'.format(self.counter), tag='EXP')
+            f'Starting with counter {self.counter}', tag='EXP')
     
     @property
     def counter(self):
@@ -36,18 +36,18 @@ class Experiment(Module):
 
     def run(self, callback=None):
         self.logger.info(
-            '#{} Starting experiment'.format(shortid(self)), tag='EXP')
+            f'#{shortid(self)} Starting experiment', tag='EXP')
         self.config.populate(Loader.instance())
         self._perform(callback=callback)
         self.logger.info(
-            '#{} Experiment finished'.format(shortid(self)), tag='EXP')
+            f'#{shortid(self)} Experiment finished', tag='EXP')
     
     def _perform(self, callback=None):
         if callback is None:
             self.logger.error(
-                '#{} No behaviour set! Specify a callback function in Lab.run(f) or subclass Experiment and overload _run.'.format(shortid(self)), tag='EXP')
+                f'#{shortid(self)} No behaviour set! Specify a callback function in Lab.run(f) or subclass Experiment and overload _run.', tag='EXP')
             return
         callback(self)
     
     def __repr__(self):
-        return 'Experiment {}'.format(shortid(self))
+        return f'Experiment {shortid(self)}'

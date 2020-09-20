@@ -23,7 +23,8 @@ class Module(Syncable, Serializable):
 
             # Logging
             self.logger = ProxyLogger(self)
-            self.logger.info('Module \'{}\' has been started'.format(self.name), tag='Modular')
+            self.logger.info(
+                f'Module \'{self.name}\' has been started', tag='Modular')
         
         @property
         def children_modules(self):
@@ -33,8 +34,7 @@ class Module(Syncable, Serializable):
             super()
             if self.logger:
                 # self.logger.update()
-                self.logger.info('Module \'{}\' has been attached to \'{}\''.format(
-                    self.name, self.parent.name), tag='Modular')
+                self.logger.info(f'Module \'{self.name}\' has been attached to \'{self.parent.name}\'', tag='Modular')
 
         def detached(self):
             pass

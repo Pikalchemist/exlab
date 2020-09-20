@@ -72,7 +72,7 @@ class Loader(object):
 
         if added:
             logger.info(
-                'Source folder(s) {} has been added to the loader'.format(added))
+                f'Source folder(s) {added} has been added to the loader')
 
     # def register_default_sourcepath(self):
     #     self.add_source(Path.cwd())
@@ -95,7 +95,7 @@ class Loader(object):
                 pass
         raise Exception('Trying to save a python file not residing inside the source path.\n' +
                         'May be you have forgotten to update utils.loaders.sourcePath?\n' +
-                        'Path: {}'.format(path))
+                        f'Path: {path}')
     
 
     def load(self, path, classname=None, imports=None):
@@ -105,7 +105,7 @@ class Loader(object):
             path = str(path)[:-len('.py')]
 
         logger.debug(
-            'Importing {} from {}'.format(classname, path))
+            f'Importing {classname} from {path}')
         filepath = Path(path.replace('.', '/')).with_suffix('.py')
 
         found = False
@@ -113,8 +113,8 @@ class Loader(object):
             if (sp / filepath).exists():
                 found = True
         if not found:
-            raise Exception('File \'{}\' not found in the source path.\n'.format(filepath) +
-                            'Currently: {}\n'.format(list(map(str, self.sourcepath))) + 
+            raise Exception(f'File \'{filepath}\' not found in the source path.\n' +
+                            f'Currently: {map(str, self.sourcepath))}\n' +
                             'May be you have forgotten to update utils.loaders.sourcePath?')
 
         imports = imports if imports else [classname]

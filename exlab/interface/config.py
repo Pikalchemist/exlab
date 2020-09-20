@@ -46,11 +46,10 @@ class Config(LightConfig):
         self.loader = loader
         self.serializer = None
 
-        logger.debug('#{} config file created, basedir {}'.format(
-            shortid(self), self.basedir))
+        logger.debug(f'#{shortid(self)} config file created, basedir {self.basedir}')
 
     def load_file(self, filename):
-        logger.debug2('#{} load file {}'.format(shortid(self), filename))
+        logger.debug2(f'#{shortid(self)} load file {filename}')
         filename = Path(filename)
 
         data = self._load_data_from_file(filename)
@@ -65,13 +64,12 @@ class Config(LightConfig):
             self._walk_dict(data)
             return data
         except Exception as e:
-            logger.warning('#{} cannot load data from {}: {}'.format(
-                shortid(self), filename, e))
+            logger.warning('#{shortid(self)} cannot load data from {filename}: {e}')
             return {}
 
     def load_args(self, argv, custom_argparse=False):
         logger.debug2(
-            '#{} load input arguments {}'.format(shortid(self), argv))
+            f'#{shortid(self)} load input arguments {argv}')
 
         if argv:
             arg = argv[0]
@@ -110,7 +108,7 @@ class Config(LightConfig):
                 confs = [{key: value} for value in values]
 
         if len(confs) > self.MAX_MULTIVALUES:
-            raise Exception('Too many ({}/{})'.format(len(confs), self.MAX_MULTIVALUES))
+            raise Exception(f'Too many ({len(confs)}/{self.MAX_MULTIVALUES})')
     
         if not confs:
              # Default configuration
@@ -131,7 +129,7 @@ class Config(LightConfig):
     def _load_parameters(self, filename=None):
         parameters = self.structure.retrieve_parameters(self.top, self.relativedir / filename if filename else None)
         logger.debug2(
-            '#{} parameters {}'.format(shortid(self), parameters))
+            f'#{shortid(self)} parameters {parameters}')
 
         for key, parameter in parameters.items():
             try:
@@ -193,7 +191,7 @@ class Config(LightConfig):
             if '__import__' in data:
                 filename = data['__import__']
                 logger.debug2(
-                    '#{} import from {}'.format(shortid(self), filename))
+                    f'#{shortid(self)} import from {filename}')
 
                 data.clear()
                 d = self._load_data_from_file(filename)
@@ -211,10 +209,10 @@ class Config(LightConfig):
             if '__path__' in data or '__class__' in data:
                 if '__path__' not in data:
                     logger.error(
-                        '#{} missing __path__ key for object import'.format(shortid(self)))
+                        f'#{shortid(self)} missing __path__ key for object import')
                 elif '__class__' not in data:
                     logger.error(
-                        '#{} missing __class__ key for object import'.format(shortid(self)))
+                        f'#{shortid(self)} missing __class__ key for object import')
                 else:
                     obj = self.__instantiate_object(data)
 
@@ -246,9 +244,9 @@ class Config(LightConfig):
                 kwargs[pass_dict] = arg_data
 
         logger.debug2(
-            '#{} object {} import from {}'.format(shortid(self), classname, path))
+            f'#{shortid(self)} object {classname} import from {path}')
         logger.debug2(
-            '#{} instantiate {} with parameters {} and {}'.format(shortid(self), classname, args, kwargs))
+            f'#{shortid(self)} instantiate {classname} with parameters {args} and {kwargs}')
         
         obj = self.loader.instantiate(
             path, classname, dict_=arg_data, args=args, kwargs=kwargs, serializer=self.serializer)
@@ -267,7 +265,7 @@ class ConfigStructure(object):
     
     def retrieve_parameters(self, top, filename=None):
         logger.debug2(
-            'Looking up parameters for {}'.format(filename))
+            f'Looking up parameters for {filename}')
         parameters = {}
         filename = Path(filename)
         if top or (filename and self.matches(filename)):
@@ -307,7 +305,7 @@ class Parameter(object):
         self._file = None
     
     def __repr__(self):
-        return 'Parameter(k:{}, c:{})'.format(self._key, self._file)
+        return f'Parameter(k:{self._key}, c:{self._file})'
 
     def import_key(self, key, filename=[]):
         if not isinstance(filename, list):

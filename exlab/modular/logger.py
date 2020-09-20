@@ -53,8 +53,8 @@ class Logger(object):
         self.name = 'exlogger'
         self.events = []
 
-        self.loggerTerminal = self.createLogger('{}:c'.format(self.name))
-        self.loggerFile = self.createLogger('{}:f'.format(self.name))
+        self.loggerTerminal = self.createLogger(f'{self.name}:c')
+        self.loggerFile = self.createLogger(f'{self.name}:f')
         self.enableTerminal()
     
     @classmethod
@@ -143,13 +143,13 @@ class Logger(object):
             self.addEvent(msg, level, *args, tag=tag, **kwargs)
         kwargs.pop('module', '')
 
-        tagStr = '[{}] '.format(tag) if tag else ''
+        tagStr = f'[{tag}] ' if tag else ''
         # Displaying
         if level > levels[1]:
-            self.loggerTerminal.log(level, '{}{}'.format(tagStr, msg), *args, **kwargs)
+            self.loggerTerminal.log(level, f'{tagStr}{msg}', *args, **kwargs)
         # Saving (to file)
         if level > levels[2]:
-            self.loggerTerminal.log(level, '{}{}'.format(tagStr, msg), *args, **kwargs)
+            self.loggerTerminal.log(level, f'{tagStr}{msg}', *args, **kwargs)
     
     def debug2(self, msg, *args, **kwargs):
         return self.log(msg, self.DEBUG2, *args, **kwargs)
@@ -266,7 +266,7 @@ class Event(object):
 
         self.id = Event.number
         Event.number += 1
-    
+
     def matches(self, search=None, tag=None):
         if search:
             return sum(search in data for data in self.data()) > 0
@@ -279,7 +279,7 @@ class Event(object):
         return (self.time, logging.getLevelName(self.level), self.tag, name, self.message)
 
     def __repr__(self):
-        return "@{} {} [{}] {}".format(self.time, '', self.tag, self.message)
+        return f'@{self.time} {''} [{self.tag}] {self.message}'
 
 
 

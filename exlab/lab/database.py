@@ -31,7 +31,7 @@ class Database(object):
         self.commit_hashes = io.get_git_hashes()
     
     def __repr__(self):
-        return 'Database {}'.format(self.path)
+        return f'Database {self.path}'
     
     def set_fromdict(self, dict_):
         for attribute in ('date', 'timestamp', 'commit_hashes'):
@@ -47,7 +47,8 @@ class Database(object):
             with open(dbfile) as f:
                 data = yaml.load(f, Loader=yaml.FullLoader)
         except Exception as e:
-            logger.warning('Cannot load data from {}: {}'.format(dbfile, e))
+            logger.warning(
+                f'Cannot load data from {dbfile}: {e}')
             return None
 
         db = Database(folder, data.get('config'))
@@ -82,7 +83,7 @@ class Database(object):
         while not fullpath or os.path.exists(fullpath):
             if fullpath:
                 if cls.COUNTER not in filename:
-                    filename += '_{}'.format(cls.COUNTER)
+                    filename += f'_{cls.COUNTER}'
                 else:
                     dict_[cls.COUNTER] += 1
             file_ = templater.render(filename)
@@ -94,6 +95,6 @@ class Database(object):
     @classmethod
     def from_experiment(cls, experiment):
         folder = cls.create_filepath(experiment)
-        logger.info('Create database at {}'.format(folder))
+        logger.info(f'Create database at {folder}')
         db = Database(folder, experiment.config.data)
         return db

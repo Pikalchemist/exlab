@@ -127,7 +127,7 @@ class Serializer(object):
 
 
 def getReference(caption, type_='', id_data=''):
-    return "[[{}||{}||{}]]".format(caption, type_, id_data)
+    return f'[[{caption}||{type_}||{id_data}]]'
 
 
 class Serializable(object):
