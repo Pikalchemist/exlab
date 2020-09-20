@@ -150,8 +150,11 @@ class PatchItem(GraphItem):
 
     def display(self, plotter):
         if self.shape == 'rectangle':
-            plotter.ax.add_patch(patches.Rectangle(self.position,
-                                                   self.width,
-                                                   self.height,
-                                                   alpha=self.options.get('alpha'),
-                                                   zorder=self.options.get('zorder')))
+            borders = (False, True) if self.options.get('border') else (False)
+            for border in borders:
+                plotter.ax.add_patch(patches.Rectangle(self.position,
+                                                    self.width,
+                                                    self.height,
+                                                    alpha=.5 if border else self.options.get('alpha'),
+                                                    zorder=self.options.get('zorder'),
+                                                    fill=not border))
