@@ -49,7 +49,7 @@ class Logger(object):
 
     def __init__(self):
         # tagLevels = {tag: (recording, to console, to file)}
-        self.tagLevels = {'': (logging.DEBUG, logging.INFO, -1)}
+        self.tagLevels = {'': [logging.DEBUG, logging.INFO, -1]}
         self.name = 'exlogger'
         self.events = []
 
@@ -104,7 +104,7 @@ class Logger(object):
 
     def setLevel(self, level, tagFilter='', type_=0):
         if tagFilter not in self.tagLevels:
-            self.tagLevels[tagFilter] = tuple(self.tagLevels[''])
+            self.tagLevels[tagFilter] = list(self.tagLevels[''])
         self.tagLevels[tagFilter][type_] = level
 
     def setRecordLevel(self, level, tagFilter=''):
