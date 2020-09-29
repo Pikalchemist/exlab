@@ -24,6 +24,7 @@ class Visual(object):
         for i, graph in enumerate(graphes):
             vax = self.createAxis(graph, i)
             graph.display(vax)
+            vax.ax.legend()
     
     def createAxis(self, graph, i):
         kwargs = {}
@@ -129,12 +130,13 @@ class ScatterItem(GraphItem):
         self.options = options
 
     def display(self, plotter):
+        label = self.options.get('label')
         if self.dim == 1:
-            plotter.ax.scatter(self.data[:, 0])
+            plotter.ax.scatter(self.data[:, 0], label=label)
         elif self.dim == 2:
-            plotter.ax.scatter(self.data[:, 0], self.data[:, 1])
+            plotter.ax.scatter(self.data[:, 0], self.data[:, 1], label=label)
         elif self.dim >= 2:
-            plotter.ax.scatter(self.data[:, 0], self.data[:, 1], self.data[:, 2])
+            plotter.ax.scatter(self.data[:, 0], self.data[:, 1], self.data[:, 2], label=label)
 
 
 class PatchItem(GraphItem):
