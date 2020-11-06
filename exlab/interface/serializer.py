@@ -40,7 +40,7 @@ class Serializer(object):
                   'Circular dependencies.'
     SERIALIZER = 'serializer'
 
-    def __init__(self, root=None, options=None):
+    def __init__(self, root=None, options=None, values=None):
         self.root = root if root else self
 
         # Shared data
@@ -50,12 +50,19 @@ class Serializer(object):
         self.finders = {}
         self.values = {}
         self.categoryValues = {}
-
         self.options = {}
+
         if self.root is not self:
+            self.finders = copy.copy(self.root.finders)
+            self.values = copy.copy(self.root.values)
+            for category, values in self.root.categoryValues.items():
+                self.categoryValues[category] = copy.copy(values)
             self.options = copy.copy(self.root.options)
+
         if options:
             self.options.update(options)
+        if values:
+            self.values.update(values)
 
     def add(self, obj, id_=None):
         id_ = str(id_ if id_ else id(obj))
@@ -96,8 +103,8 @@ class Serializer(object):
         else:
             return self.categoryValues.get(namespace, {}).get(id_[p + 1:])
     
-    def clone(self, options=None):
-        return self.__class__(self, options)
+    def clone(self, options=None, values=None):
+        return self.__class__(self, options, values)
     
     def attach_finder(self, namespace, method):
         self.root.finders[namespace] = method
@@ -171,25 +178,30 @@ class Serializer(object):
 
         return x
 
-    def deserialize(self, dict_, context=[], **kwargs):
+    def deserialize(self, dict_, context=[], obj=None, default=None):
+        if dict_ is None:
+            return default
         if type(dict_) in (list, tuple, set):
-            return [self.deserialize(x, context=context, **kwargs) for x in dict_]
+            return type(dict_)(self.deserialize(x, context=context) for x in dict_)
         if type(dict_) not in (dict,):
             return dict_
 
         id_ = dict_.get('__id__', '')
-        obj = self.get(id_)
-        if obj:
-            logger.debug(f'D: id {id_} already deserialized: {obj}')
-            return obj
+        robj = self.get(id_)
+        if robj:
+            logger.debug(f'D: id {id_} already deserialized: {robj}')
+            return robj
+        
+        if not dict_.get('__dict__'):
+            return {self.deserialize(key): self.deserialize(value) for key, value in dict_.items()}
 
         from exlab.interface.loader import Loader
         cls_ = Loader.instance().load(dict_['__path__'], dict_['__class__'])
-        logger.debug(f'D: deserializing: {cls_} with args {kwargs}')
+        logger.debug(f'D: deserializing: {cls_} with obj {obj}')
         if dict_.get('__type__'):
             return cls_
         else:
-            return cls_.deserialize(dict_, self, **kwargs)
+            return cls_.deserialize(dict_, self, obj=obj)
 
     def uid(self, category, id_):
         return {'__id__': f'{category}:{id_}'}
