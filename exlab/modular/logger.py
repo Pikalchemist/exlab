@@ -196,28 +196,28 @@ class ProxyLogger(object):
     def display(self, search=None, tag=None, style='html'):
         logger().display(search=search, tag=self.tag, style=style)
 
-    def setLevel(self, level, tagFilter='', type_=0):
+    def setLevel(self, level, tagFilter=None, type_=0):
         logger().setLevel(level, parameter(tagFilter, self.tag), type_)
 
-    def setRecordLevel(self, level, tagFilter=''):
+    def setRecordLevel(self, level, tagFilter=None):
         self.setLevel(level, tagFilter, 0)
 
-    def setDisplayLevel(self, level, tagFilter=''):
+    def setDisplayLevel(self, level, tagFilter=None):
         self.setLevel(level, tagFilter, 1)
 
-    def setSaveLevel(self, level, tagFilter=''):
+    def setSaveLevel(self, level, tagFilter=None):
         self.setLevel(level, tagFilter, 2)
 
-    def recordDebug(self, tagFilter=''):
+    def recordDebug(self, tagFilter=None):
         self.setRecordLevel(logging.DEBUG, tagFilter)
 
-    def recordDebug2(self, tagFilter=''):
+    def recordDebug2(self, tagFilter=None):
         self.setRecordLevel(Logger.DEBUG2, tagFilter)
 
-    def displayDebug(self, tagFilter=''):
+    def displayDebug(self, tagFilter=None):
         self.setDisplayLevel(logging.DEBUG, tagFilter)
 
-    def displayDebug2(self, tagFilter=''):
+    def displayDebug2(self, tagFilter=None):
         self.setDisplayLevel(Logger.DEBUG2, tagFilter)
 
     def log(self, msg, level, *args, **kwargs):

@@ -2,6 +2,7 @@ from exlab.interface.config import Config, ConfigStructure
 from exlab.interface.loader import Loader
 from exlab.modular.module import Module
 from exlab.lab.experiment import Experiment
+from exlab.lab.database import Database
 
 import sys
 import os
@@ -24,7 +25,7 @@ class Lab(Module):
             self.configdir[0], 'databases')
 
         Loader.instance().add_source(sourcedir)
-        Loader.instance().set_databasedir(databasedir)
+        Database.set_databasedir(databasedir)
 
         self.defaults = defaults
         self.experiments = []

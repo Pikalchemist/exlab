@@ -12,8 +12,8 @@ import sys
 import os
 
 
-logger = exlogger.getLogger('loader', tag='LOAD')
-logger.enable_debug2()
+logger = exlogger.ProxyLogger(tag='LOAD')
+# logger.displayDebug2()
 
 
 def register_sourcepath(sourcepath):
@@ -50,10 +50,6 @@ class Loader(object):
     def sourcepath(self):
         return [Path(p) for p in sys.path]
     
-    @property
-    def databasedir(self):
-        return Database.databasedir
-    
     def add_source(self, sourcepath):
         if type(sourcepath) is not list:
             sourcepath = [sourcepath]
@@ -76,10 +72,6 @@ class Loader(object):
 
     # def register_default_sourcepath(self):
     #     self.add_source(Path.cwd())
-    
-    def set_databasedir(self, databasedir):
-        Database.databasedir = Path(databasedir)
-        Database.databasedir.mkdir(parents=True, exist_ok=True)
 
     def class_path(self, obj):
         # if not self.sourcepath:
@@ -114,7 +106,7 @@ class Loader(object):
                 found = True
         if not found:
             raise Exception(f'File \'{filepath}\' not found in the source path.\n' +
-                            f'Currently: {map(str, self.sourcepath))}\n' +
+                            f'Currently: {map(str, self.sourcepath)}\n' +
                             'May be you have forgotten to update utils.loaders.sourcePath?')
 
         imports = imports if imports else [classname]
@@ -131,20 +123,7 @@ class Loader(object):
             obj = cls_(*args, **kwargs)
         return obj
     
-    def list_databases(self):
-        return self._list_databases(self.databasedir)
     
-    def _list_databases(self, folder):
-        databases = []
-        folder = Path(folder)
-        for f in folder.iterdir():
-            fn = folder / f / Database.FILENAME
-            db = Database.from_file(fn)
-            if db:
-                databases.append(db)
-            else:
-                databases += self._list_databases(folder / f)
-        return databases
     
     @staticmethod
     def find_file(filelist, prefix='', suffix=''):
