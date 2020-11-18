@@ -13,7 +13,7 @@ import exlab.modular.logger as exlogger
 
 
 logger = exlogger.ProxyLogger(tag='SERIAL')
-logger.displayDebug2()
+# logger.displayDebug2()
 
 # def serialize(instance, keys, foreigns=[], exportPathType=False, options={}):
 #     dict_ = {}
@@ -41,7 +41,7 @@ class Serializer(object):
     SERIALIZER = 'serializer'
 
     def __init__(self, root=None, options=None, values=None):
-        self.root = root if root else self
+        self.root = root.root if root is not None else self
 
         # Shared data
         self.ids = {}
@@ -55,8 +55,8 @@ class Serializer(object):
         if self.root is not self:
             self.finders = copy.copy(self.root.finders)
             self.values = copy.copy(self.root.values)
-            for category, values in self.root.categoryValues.items():
-                self.categoryValues[category] = copy.copy(values)
+            for cat, val in self.root.categoryValues.items():
+                self.categoryValues[cat] = copy.copy(val)
             self.options = copy.copy(self.root.options)
 
         if options:
@@ -75,6 +75,7 @@ class Serializer(object):
             return
         if isinstance(id_, dict):
             raise Exception(f'ID {id_} is a dictionnary, use Serializer.deserialize instead.')
+        # logger.debug2(f'looking out for {id_} in {self.values}')
         id_ = str(id_)
         if id_.startswith('@'):
             id_ = id_[1:]
