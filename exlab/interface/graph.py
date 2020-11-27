@@ -19,6 +19,14 @@ class Visual(object):
         pass
 
     def display(self, *graphes):
+        flat = []
+        for graph in graphes:
+            if isinstance(graph, list):
+                flat += graph
+            else:
+                flat.append(graph)
+        graphes = flat
+
         self.subconf, self.subfigsize = self.createSubConf(graphes)
         self.fig = plt.figure(figsize=(8, 8))
         for i, graph in enumerate(graphes):
@@ -87,6 +95,10 @@ class Graph(object):
         self.items.append(ScatterItem(*args, **kwargs))
         return self
     
+    def arrow(self, *args, **kwargs):
+        self.items.append(ArrowItem(*args, **kwargs))
+        return self
+    
     def rectangle(self, *args, **kwargs):
         kwargs['shape'] = 'rectangle'
         self.items.append(PatchItem(*args, **kwargs))
@@ -102,6 +114,18 @@ class GraphItem(object):
 
     def display(self, visual):
         pass
+
+    def convertData(self, data):
+        if data is None:
+            return data
+        if isinstance(data, np.ndarray):
+            return data
+        elif isinstance(data, list):
+            if len(data) > 0 and hasattr(data[0], 'plain'):
+                return np.array([item.plain() for item in data])
+            else:
+                return np.array(data)
+        return np.array(data)
 
 
 class PlotItem(GraphItem):
@@ -120,23 +144,44 @@ class PlotItem(GraphItem):
 
 
 class ScatterItem(GraphItem):
-    def __init__(self, *data, **options):
+    def __init__(self, points, **options):
         super().__init__()
-        if len(data) == 1 and isinstance(data[0], np.ndarray):
-            self.data = data[0]
-        else:
-            self.data = np.array(data)
+        self.data = self.convertData(points)
         self.dim = self.data.shape[1]
         self.options = options
+        if 'color' in options:
+            self.options['color'] = self.convertData(self.options['color'])
 
     def display(self, plotter):
         label = self.options.get('label')
+        color = self.options.get('color')
         if self.dim == 1:
-            plotter.ax.scatter(self.data[:, 0], label=label)
+            plotter.ax.scatter(self.data[:, 0],
+                               label=label, c=color)
         elif self.dim == 2:
-            plotter.ax.scatter(self.data[:, 0], self.data[:, 1], label=label)
+            plotter.ax.scatter(self.data[:, 0], self.data[:, 1],
+                               label=label, c=color)
         elif self.dim >= 2:
-            plotter.ax.scatter(self.data[:, 0], self.data[:, 1], self.data[:, 2], label=label)
+            plotter.ax.scatter(self.data[:, 0], self.data[:, 1], self.data[:, 2],
+                               label=label, c=color)
+
+
+class ArrowItem(GraphItem):
+    def __init__(self, data, **options):
+        super().__init__()
+        self.data = self.convertData(data)
+        self.dim = self.data.shape[2]
+        self.options = options
+        if 'color' in options:
+            self.options['color'] = self.convertData(self.options['color'])
+
+    def display(self, plotter):
+        label = self.options.get('label')
+        color = self.options.get('color')
+        for data in self.data:
+            if self.dim == 2:
+                plotter.ax.arrow(data[0, 0], data[0, 1], data[1, 0], data[1, 1],
+                                 label=label, color=color, head_width=0.5)
 
 
 class PatchItem(GraphItem):
