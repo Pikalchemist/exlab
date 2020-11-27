@@ -15,24 +15,6 @@ import exlab.modular.logger as exlogger
 logger = exlogger.ProxyLogger(tag='SERIAL')
 # logger.displayDebug2()
 
-# def serialize(instance, keys, foreigns=[], exportPathType=False, options={}):
-#     dict_ = {}
-
-#     if exportPathType:
-#         from exlab.interface.loader import Loader
-#         dict_['type'] = instance.__class__.__name__
-#         dict_['path'] = os.path.splitext(Loader.instance().classPath(instance))[0]
-#     for key in keys:
-#         attr = getattr(instance, key)
-#         if attr is not None:
-#             dict_[key] = attr
-#     for key in foreigns:
-#         attr = getattr(instance, key)
-#         if attr is not None:
-#             dict_[key] = attr.primary_key()
-
-#     return Serializer.serialize_data(dict_, options=options)
-
 
 class Serializer(object):
     GID_ALREADY_DEFINED = 'Global Identifier "{}" is already associated with {} while trying to be redefined by {}'
@@ -122,7 +104,7 @@ class Serializer(object):
     # def make_gid_from_cid(instance, cid):
     #     return '{}::#({})'.format(instance.__class__.__name__, cid)
 
-    def serialize(self, instance, keys=[], foreigns=[], exportPathType=True):
+    def serialize(self, instance, keys=[], foreigns=[], exportPathType=True, reference=False):
         dict_ = {}
 
         if exportPathType:
@@ -130,6 +112,8 @@ class Serializer(object):
             dict_['__class__'] = instance.__class__.__name__
             dict_['__path__'] = Loader.instance().class_path(instance)
             dict_['__dict__'] = True
+        if reference:
+            dict_['__reference__'] = True
 
         dict_['__id__'] = id(instance)
 
