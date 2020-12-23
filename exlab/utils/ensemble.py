@@ -21,3 +21,6 @@ class Ensemble(object):
     
     def __getitem__(self, id_):
         return self.values()[id_]
+    
+    def __add__(self, other):
+        return self.__class__(self.data + other.data)
