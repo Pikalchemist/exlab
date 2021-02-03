@@ -149,21 +149,25 @@ class ScatterItem(GraphItem):
         self.data = self.convertData(points)
         self.dim = self.data.shape[1]
         self.options = options
-        if 'color' in options:
+        if 'color' in options and not isinstance(self.options['color'], str):
             self.options['color'] = self.convertData(self.options['color'])
 
     def display(self, plotter):
         label = self.options.get('label')
         color = self.options.get('color')
+        alpha = self.options.get('alpha')
+        marker = self.options.get('marker')
+
+        options = {'label': label, 'c': color, 'alpha': alpha, 'marker': marker}
         if self.dim == 1:
             plotter.ax.scatter(self.data[:, 0],
-                               label=label, c=color)
+                               **options)
         elif self.dim == 2:
             plotter.ax.scatter(self.data[:, 0], self.data[:, 1],
-                               label=label, c=color)
+                               **options)
         elif self.dim >= 2:
             plotter.ax.scatter(self.data[:, 0], self.data[:, 1], self.data[:, 2],
-                               label=label, c=color)
+                               **options)
 
 
 class ArrowItem(GraphItem):

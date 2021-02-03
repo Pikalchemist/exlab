@@ -1,10 +1,13 @@
 from exlab.utils.text import Colors
 from exlab.utils.io import parameter
+
+from contextlib import contextmanager
 from enum import Enum
 
 from tabulate import tabulate
 import coloredlogs
 import logging
+import copy
 import sys
 
 
@@ -35,6 +38,22 @@ def logger():
     return Logger.instance()
 
 
+def debugging(tagFilters):
+    return Logger.instance().debugging(tagFilters)
+
+
+def debugging2(tagFilters):
+    return Logger.instance().debugging2(tagFilters)
+
+
+def isDebugging(tagFilter):
+    return Logger.instance().isDebugging(tagFilter)
+
+
+def isDebugging2(tagFilter):
+    return Logger.instance().isDebugging2(tagFilter)
+
+
 class LoggerKind(Enum):
     RECORD = 0
     DISPLAY = 1
@@ -42,6 +61,11 @@ class LoggerKind(Enum):
 
 
 class Logger(object):
+    CRITICAL = logging.CRITICAL
+    ERROR = logging.ERROR
+    WARNING = logging.WARNING
+    INFO = logging.INFO
+    DEBUG = logging.DEBUG
     DEBUG2 = 5
     TAG_SEPARATOR = '.'
 
@@ -101,6 +125,39 @@ class Logger(object):
                 found = (key, value)
                 depth = key.count(self.TAG_SEPARATOR)
         return found
+    
+    def _displaying(self, tagFilters, level):
+        saved = copy.deepcopy(self.tagLevels)
+        if not isinstance(tagFilters, list):
+            tagFilters = [tagFilters]
+        for tagFilter in tagFilters:
+            self.setDisplayLevel(level, tagFilter)
+        return saved
+    
+    @contextmanager
+    def debugging(self, tagFilters):
+        try:
+            saved = self._displaying(tagFilters, self.DEBUG)
+            yield self
+        finally:
+            self.tagLevels = saved
+    
+    @contextmanager
+    def debugging2(self, tagFilters):
+        try:
+            saved = self._displaying(tagFilters, self.DEBUG2)
+            yield self
+        finally:
+            self.tagLevels = saved
+    
+    def isDebugging(self, tagFilter, level=DEBUG):
+        tag = self.matchingTag(tagFilter)
+        if tag is None:
+            return False
+        return tag[1][1] <= level
+    
+    def isDebugging2(self, tagFilter):
+        return self.isDebugging(self.DEBUG2)
 
     def setLevel(self, level, tagFilter='', type_=0):
         if tagFilter not in self.tagLevels:
@@ -137,6 +194,8 @@ class Logger(object):
     def log(self, msg, level, *args, **kwargs):
         tag = kwargs.pop('tag', '').lower()
         _, levels = self.matchingTag(tag)
+
+        # print(tag, level, levels, msg)
 
         # Recording (to memory)
         if level >= levels[0] and levels[0] >= 0:
@@ -195,6 +254,22 @@ class ProxyLogger(object):
     
     def display(self, search=None, tag=None, style='html'):
         logger().display(search=search, tag=self.tag, style=style)
+    
+    @contextmanager
+    def debugging(self, tagFilters=None):
+        tagFilters = parameter(tagFilters, [self.tag])
+        return logger().debugging(tagFilters)
+
+    @contextmanager
+    def debugging2(self, tagFilters=None):
+        return self.debugging(tagFilters)
+
+    def isDebugging(self, tagFilter=None, level=Logger.DEBUG):
+        tagFilter = parameter(tagFilter, self.tag)
+        return logger().isDebugging(tagFilter)
+
+    def isDebugging2(self, tagFilter=None):
+        return self.isDebugging(tagFilter, level=Logger.DEBUG2)
 
     def setLevel(self, level, tagFilter=None, type_=0):
         logger().setLevel(level, parameter(tagFilter, self.tag), type_)
