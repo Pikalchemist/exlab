@@ -321,6 +321,9 @@ class ProxyLogger(object):
         return self.log(msg, logging.CRITICAL, *args, **kwargs)
 
 
+logging.addLevelName(Logger.DEBUG2, 'DEBUG2')
+
+
 class Event(object):
     """
     A text event

@@ -5,8 +5,8 @@ from exlab.interface.serializer import Serializable
 
 
 class Module(Syncable, Serializable):
-    def __init__(self, name='', parent=None):
-        self._exlab_manager = Module.Modular(self, name, parent)
+    def __init__(self, name='', parent=None, loggerTag=None):
+        self._exlab_manager = Module.Modular(self, name, parent, loggerTag=loggerTag)
         # self._sync = self._module
 
     @property
@@ -14,7 +14,7 @@ class Module(Syncable, Serializable):
         return self._exlab_manager.logger
 
     class Modular(Syncable.Sync, NodeWithChildren):
-        def __init__(self, host, name: str = '', parent=None):
+        def __init__(self, host, name: str = '', parent=None, loggerTag=None):
             self.logger = None
             Syncable.Sync.__init__(self, host, parent)
             NodeWithChildren.__init__(self, host, parent)
@@ -25,6 +25,8 @@ class Module(Syncable, Serializable):
             self.logger = ProxyLogger(self)
             self.logger.info(
                 f'Module \'{self.name}\' has been started', tag='Modular')
+            if loggerTag:
+                self.logger.tag = loggerTag
         
         @property
         def children_modules(self):

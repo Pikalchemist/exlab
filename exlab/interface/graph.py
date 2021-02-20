@@ -41,8 +41,8 @@ class Visual(object):
         ax = self.fig.add_subplot(*self.subconf, i + 1, **kwargs)
         vax = VisualAxis(self, ax)
 
-        # if graph.ratio == 'square':
-        ax.set_aspect('equal')
+        if graph.ratio == 'square':
+            ax.set_aspect('equal')
 
         ax.yaxis.set_major_formatter(
             mpl.ticker.StrMethodFormatter('{x:,.2f}'))
