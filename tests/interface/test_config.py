@@ -125,7 +125,7 @@ class TestLoader(unittest.TestCase):
 
         self.assertEqual(dict(config.data, **truth), config.data)
         self.assertIsNotNone(config.serializer)
-        self.assertEqual(config.serializer.data['learner'], obj)
+        self.assertEqual(config.serializer.get('learner'), obj)
         self.assertEqual(config.serializer.options, {})
 
 

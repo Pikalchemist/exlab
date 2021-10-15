@@ -20,7 +20,7 @@ class SerialLearner(Serializable):
     def _deserialize(cls, dict_, serializer, obj=None):
         obj = cls(dict_.get('name'), dict_.get('obj'))
 
-        serializer.data['learner'] = obj
+        serializer.set('learner',  obj)
 
         return obj
 
