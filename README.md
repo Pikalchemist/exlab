@@ -9,7 +9,6 @@ First of all, install the package either using pip:
 
 Or from the git repository:
 
-    pip install -r ./requirements.txt
     pip install -e .
 
 A base example of how to use ExLab is provided in `examples/first/first.py` in the git repository.
