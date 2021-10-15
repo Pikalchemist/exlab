@@ -178,14 +178,21 @@ class ArrowItem(GraphItem):
         self.options = options
         if 'color' in options:
             self.options['color'] = self.convertData(self.options['color'])
+        if 'colorMap' in options:
+            self.options['colorMap'] = self.convertData(self.options['colorMap'])
 
     def display(self, plotter):
         label = self.options.get('label')
         color = self.options.get('color')
-        for data in self.data:
+        colorMap = self.options.get('colorMap')
+        for i, data in enumerate(self.data):
+            if color is None and colorMap is not None:
+                color = colorMap[i]
             if self.dim == 2:
                 plotter.ax.arrow(data[0, 0], data[0, 1], data[1, 0], data[1, 1],
                                  label=label, color=color, head_width=0.5)
+        plotter.ax.set_xlim([200, 600])
+        plotter.ax.set_ylim([200, 600])
 
 
 class PatchItem(GraphItem):
