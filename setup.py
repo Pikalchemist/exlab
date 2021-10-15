@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="exlab",
-    version="0.1.1",
+    version="0.1.2",
     author="Alexandre Manoury",
     author_email="alex@pika.tf",
     description="A Experimental Laboratory suite",

@@ -20,7 +20,7 @@ class Database(object):
     VERSION = 1
 
     fileformat = '{environment}/{name}/{%count}'
-    databasedir = Path('c:\\data\\projects\\phd\\dino\\databases') # To None
+    databasedir = Path.cwd()
     escape_spaces = '-'
 
     def __init__(self, path, config, data):
